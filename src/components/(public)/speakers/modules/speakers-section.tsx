@@ -13,6 +13,7 @@ import {
 import { getSpeakersGrouped } from "@/service/speaker"
 import type { Speaker, SpeakerYearWithSpeakers } from "@/types/speaker-types"
 import { getMediaUrl } from "@/utils/mediaUrl"
+import { sortByDisplayOrder } from "@/utils/displayOrder"
 import SpeakerModal from "./SpeakerModal"
 
 export default function SpeakersGrid() {
@@ -35,7 +36,10 @@ export default function SpeakersGrid() {
     getSpeakersGrouped()
       .then((res) => {
         if (res.success && res.data) {
-          const fetchedYears = res.data.years
+          const fetchedYears = res.data.years.map((year) => ({
+            ...year,
+            speakers: sortByDisplayOrder(year.speakers),
+          }))
           setYears(fetchedYears)
           setError(null)
           if (fetchedYears.length > 0) {

@@ -24,6 +24,7 @@ export default function EditTeamMember() {
     title: "",
     designation: "",
     description: "",
+    order: "0",
   })
   const [currentImage, setCurrentImage] = useState<string | undefined>()
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
@@ -46,6 +47,7 @@ export default function EditTeamMember() {
           title: response.data.title || "",
           designation: response.data.designation || "",
           description: response.data.description || "",
+          order: String(response.data.order ?? 0),
         })
         setCurrentImage(response.data.image_url)
       } else {
@@ -74,6 +76,7 @@ export default function EditTeamMember() {
       submitData.append("title", formData.title)
       submitData.append("designation", formData.designation)
       submitData.append("description", formData.description)
+      submitData.append("order", formData.order)
       if (selectedFile) {
         submitData.append("image_url", selectedFile)
       }
@@ -180,6 +183,23 @@ export default function EditTeamMember() {
                 onChange={handleChange}
                 disabled={submitLoading}
               />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="order">Display order</Label>
+              <Input
+                id="order"
+                name="order"
+                type="number"
+                min={0}
+                placeholder="1"
+                value={formData.order}
+                onChange={handleChange}
+                disabled={submitLoading}
+              />
+              <p className="text-xs text-muted-foreground">
+                1 is first place, 2 is second, 3 is third. Leave 0 to fill a remaining place.
+              </p>
             </div>
 
             <div className="space-y-2">

@@ -4,8 +4,18 @@ import Link from "next/link"
 import { useEffect, useState } from "react"
 import { getBanner, getButtonText, getText } from "@/service/homeService"
 import { getMediaUrl } from "@/utils/mediaUrl"
+
+function youtubeVideoId(url: string) {
+  const match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^#&?]{11})/)
+  return match?.[1] || ""
+}
+
 export default function HeroSection() {
   const [bannerUrl, setBannerUrl] = useState<string | null>(null)
+  const [bannerVideoUrl, setBannerVideoUrl] = useState<string | null>(null)
+  const [bannerYoutubeUrl, setBannerYoutubeUrl] = useState<string | null>(null)
+  const [playVideo, setPlayVideo] = useState(false)
+  const [videoFailed, setVideoFailed] = useState(false)
   const [imageError, setImageError] = useState(false)
   const [buttonLink, setButtonLink] = useState<string | null>(null)
   const [bannerText, setBannerText] = useState<string>("")
@@ -17,11 +27,13 @@ export default function HeroSection() {
     async function fetchBanner() {
       const response = await getBanner()
       if (response.success && response.data) {
-        if (Array.isArray(response.data) && response.data.length > 0) {
-          setBannerUrl(response.data[0].image_url)
-          setImageError(false)
-        } else if (response.data.image_url) {
-          setBannerUrl(response.data.image_url)
+        const bannerData = Array.isArray(response.data) ? response.data[0] : response.data
+        if (bannerData) {
+          setBannerUrl(bannerData.image_url || null)
+          setBannerVideoUrl(bannerData.video_url || null)
+          setBannerYoutubeUrl(bannerData.youtube_url || null)
+          setPlayVideo(false)
+          setVideoFailed(false)
           setImageError(false)
         }
       }
@@ -59,6 +71,12 @@ export default function HeroSection() {
     fetchBannerText()
   }, [])
 
+  useEffect(() => {
+    if (!bannerYoutubeUrl && !bannerVideoUrl) return
+    const timer = window.setTimeout(() => setPlayVideo(true), 3000)
+    return () => window.clearTimeout(timer)
+  }, [bannerYoutubeUrl, bannerVideoUrl])
+
   const handleImageError = () => {
     setImageError(true)
   }
@@ -71,9 +89,19 @@ export default function HeroSection() {
         })()
       : null
 
+  const youtubeId = bannerYoutubeUrl ? youtubeVideoId(bannerYoutubeUrl) : ""
+  const fileVideoSrc = bannerVideoUrl
+    ? (() => {
+        const mediaUrl = getMediaUrl(bannerVideoUrl)
+        return mediaUrl !== "/placeholder.svg" ? mediaUrl : null
+      })()
+    : null
+  const showYoutube = playVideo && !videoFailed && Boolean(youtubeId)
+  const showFileVideo = playVideo && !videoFailed && !youtubeId && Boolean(fileVideoSrc)
+
   return (
     <section className="relative h-[60vh] sm:h-[70vh] md:h-[80vh] lg:h-screen w-full flex items-center justify-center text-center overflow-hidden">
-      {imageSrc && (
+      {imageSrc && !showYoutube && !showFileVideo && (
         <Image
           src={imageSrc}
           alt="Arunachal Literature Festival Background"
@@ -85,6 +113,29 @@ export default function HeroSection() {
           }}
           onError={handleImageError}
           priority
+        />
+      )}
+      {showYoutube && (
+        <div className="absolute inset-0 overflow-hidden" style={{ zIndex: -1 }}>
+          <iframe
+            className="absolute left-1/2 top-1/2 h-[56.25vw] min-h-full w-[177.78vh] min-w-full -translate-x-1/2 -translate-y-1/2"
+            src={`https://www.youtube.com/embed/${youtubeId}?autoplay=1&mute=1&playsinline=1&loop=1&playlist=${youtubeId}&controls=0&rel=0`}
+            title="Banner video"
+            allow="autoplay; encrypted-media; picture-in-picture"
+            referrerPolicy="strict-origin-when-cross-origin"
+          />
+        </div>
+      )}
+      {showFileVideo && fileVideoSrc && (
+        <video
+          className="absolute inset-0 h-full w-full object-cover"
+          style={{ zIndex: -1 }}
+          src={fileVideoSrc}
+          autoPlay
+          muted
+          playsInline
+          loop
+          onError={() => setVideoFailed(true)}
         />
       )}
 

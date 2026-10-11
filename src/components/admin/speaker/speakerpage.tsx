@@ -396,6 +396,7 @@ export default function SpeakersPage() {
                       <Table className="min-w-[600px]">
                         <TableHeader>
                           <TableRow>
+                            <TableHead className="w-16">Order</TableHead>
                             <TableHead className="w-16">Image</TableHead>
                             <TableHead>Name</TableHead>
                             <TableHead className="hidden md:table-cell">About</TableHead>
@@ -405,6 +406,7 @@ export default function SpeakersPage() {
                         <TableBody>
                           {yearGroup.speakers.map((speaker) => (
                             <TableRow key={speaker._id}>
+                              <TableCell className="font-medium">{speaker.order ?? 0}</TableCell>
                               <TableCell>
                                 {speaker.image_url ? (
                                   <Image

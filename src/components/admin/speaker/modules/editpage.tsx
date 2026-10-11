@@ -26,6 +26,7 @@ export default function EditSpeaker() {
     name: "",
     about: "",
     year_ref: "",
+    order: "0",
   })
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [years, setYears] = useState<SpeakerYear[]>([])
@@ -51,6 +52,7 @@ export default function EditSpeaker() {
           name: response.data.name,
           about: response.data.about,
           year_ref: response.data.year_ref,
+          order: String(response.data.order ?? 0),
         })
       } else {
         setError(response.error || "Failed to fetch speaker")
@@ -97,6 +99,7 @@ export default function EditSpeaker() {
       const submitData = new FormData()
       submitData.append("name", formData.name)
       submitData.append("about", formData.about)
+      submitData.append("order", formData.order)
 
       if (speaker && formData.year_ref !== speaker.year_ref) {
         submitData.append("yearId", formData.year_ref)
@@ -268,6 +271,23 @@ export default function EditSpeaker() {
                     required
                     disabled={submitLoading}
                   />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="order">Display order</Label>
+                  <Input
+                    id="order"
+                    name="order"
+                    type="number"
+                    min={0}
+                    placeholder="1"
+                    value={formData.order}
+                    onChange={handleChange}
+                    disabled={submitLoading}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    1 is first place, 2 is second, 3 is third. Leave 0 to fill a remaining place.
+                  </p>
                 </div>
 
                 <div className="space-y-2">

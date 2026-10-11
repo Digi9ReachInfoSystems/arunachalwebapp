@@ -10,6 +10,7 @@ import { useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import { getSpeakersGrouped } from "@/service/speaker"
 import { getMediaUrl } from "@/utils/mediaUrl"
+import { sortByDisplayOrder } from "@/utils/displayOrder"
 import type { Speaker, SpeakerYearWithSpeakers } from "@/types/speaker-types"
 
 export default function Speakers() {
@@ -39,7 +40,7 @@ export default function Speakers() {
           const year =
             [...fetchedYears].sort((a, b) => b.year - a.year)[0] ?? fetchedYears[0] ?? null
           setLatestYear(year)
-          setSpeakers(year?.speakers ?? [])
+          setSpeakers(sortByDisplayOrder(year?.speakers ?? []))
         } else {
           setError(res.error || "Failed to fetch speakers.")
         }
