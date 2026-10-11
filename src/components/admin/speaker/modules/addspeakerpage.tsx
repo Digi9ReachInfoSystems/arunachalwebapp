@@ -18,6 +18,7 @@ export default function CreateSpeaker() {
     name: "",
     about: "",
     year_ref: "",
+    order: "0",
   })
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
@@ -72,6 +73,7 @@ export default function CreateSpeaker() {
       const submitData = new FormData()
       submitData.append("name", formData.name)
       submitData.append("about", formData.about)
+      submitData.append("order", formData.order)
 
       if (selectedFile) {
         submitData.append("image_url", selectedFile)
@@ -81,7 +83,7 @@ export default function CreateSpeaker() {
 
       if (response.success) {
         setSuccess("Speaker added successfully!")
-        setFormData({ name: "", about: "", year_ref: "" })
+        setFormData({ name: "", about: "", year_ref: "", order: "0" })
         setSelectedFile(null)
         const fileInput = document.getElementById("image_file") as HTMLInputElement
         if (fileInput) fileInput.value = ""
@@ -211,6 +213,23 @@ export default function CreateSpeaker() {
                 required
                 disabled={loading}
               />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="order">Display order</Label>
+              <Input
+                id="order"
+                name="order"
+                type="number"
+                min={0}
+                placeholder="1"
+                value={formData.order}
+                onChange={handleChange}
+                disabled={loading}
+              />
+              <p className="text-xs text-muted-foreground">
+                1 is first place, 2 is second, 3 is third. Leave 0 to fill a remaining place.
+              </p>
             </div>
 
             <div className="space-y-2">

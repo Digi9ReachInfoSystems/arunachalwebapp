@@ -17,6 +17,7 @@ export default function CreateTeamMember() {
     title: "",
     designation: "",
     description: "",
+    order: "0",
   })
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [loading, setLoading] = useState(false)
@@ -39,6 +40,7 @@ export default function CreateTeamMember() {
       submitData.append("title", formData.title)
       submitData.append("designation", formData.designation)
       submitData.append("description", formData.description)
+      submitData.append("order", formData.order)
       if (selectedFile) {
         submitData.append("image_url", selectedFile)
       }
@@ -46,7 +48,7 @@ export default function CreateTeamMember() {
       const response = await addTeamMember(submitData)
       if (response.success) {
         setSuccess("Team member added successfully!")
-        setFormData({ title: "", designation: "", description: "" })
+        setFormData({ title: "", designation: "", description: "", order: "0" })
         setSelectedFile(null)
         const fileInput = document.getElementById("image_file") as HTMLInputElement
         if (fileInput) fileInput.value = ""
@@ -139,6 +141,23 @@ export default function CreateTeamMember() {
                 onChange={handleChange}
                 disabled={loading}
               />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="order">Display order</Label>
+              <Input
+                id="order"
+                name="order"
+                type="number"
+                min={0}
+                placeholder="1"
+                value={formData.order}
+                onChange={handleChange}
+                disabled={loading}
+              />
+              <p className="text-xs text-muted-foreground">
+                1 is first place, 2 is second, 3 is third. Leave 0 to fill a remaining place.
+              </p>
             </div>
 
             <div className="space-y-2">

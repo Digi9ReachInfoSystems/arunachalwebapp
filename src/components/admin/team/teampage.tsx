@@ -139,6 +139,7 @@ export default function TeamPage() {
               <Table className="min-w-[600px]">
                 <TableHeader>
                   <TableRow>
+                    <TableHead className="w-16">Order</TableHead>
                     <TableHead className="w-16">Image</TableHead>
                     <TableHead>Name</TableHead>
                     <TableHead className="hidden md:table-cell">Designation</TableHead>
@@ -148,6 +149,7 @@ export default function TeamPage() {
                 <TableBody>
                   {members.map((member) => (
                     <TableRow key={member._id}>
+                      <TableCell className="font-medium">{member.order ?? 0}</TableCell>
                       <TableCell>
                         {member.image_url ? (
                           <Image

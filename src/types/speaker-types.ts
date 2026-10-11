@@ -18,6 +18,8 @@ export interface Speaker {
   name: string
   about: string
   image_url?: string
+  order?: number
+  createdAt?: string
 }
 
 export interface SpeakerYearWithSpeakers extends SpeakerYear {

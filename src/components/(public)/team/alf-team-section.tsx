@@ -7,6 +7,7 @@ import SunIcon from "@/components/(public)/archive/sun-icon"
 import { getTeamMemberById, getTeamMembers } from "@/service/teamService"
 import type { TeamMember } from "@/types/team-types"
 import { getMediaUrl } from "@/utils/mediaUrl"
+import { sortByDisplayOrder } from "@/utils/displayOrder"
 import TeamMemberModal from "./team-member-modal"
 
 export default function AlfTeamSection() {
@@ -43,7 +44,7 @@ export default function AlfTeamSection() {
   useEffect(() => {
     getTeamMembers()
       .then((res) => {
-        if (res.success && res.data) setMembers(res.data)
+        if (res.success && res.data) setMembers(sortByDisplayOrder(res.data))
       })
       .finally(() => setLoading(false))
   }, [])
