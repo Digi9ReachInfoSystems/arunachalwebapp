@@ -132,6 +132,9 @@ export default function HeroSection() {
   }
 
   const applyYoutubeSound = () => {
+    // Captions get cut off when the video is cropped to fill the banner, so keep them off.
+    sendYoutubeCommand("unloadModule", ["captions"])
+    sendYoutubeCommand("unloadModule", ["cc"])
     if (soundOn) {
       sendYoutubeCommand("unMute")
       sendYoutubeCommand("setVolume", [100])
@@ -187,7 +190,7 @@ export default function HeroSection() {
           <iframe
             ref={youtubeFrameRef}
             className="absolute left-1/2 top-1/2 h-[56.25vw] min-h-full w-[177.78vh] min-w-full -translate-x-1/2 -translate-y-1/2"
-            src={`https://www.youtube.com/embed/${youtubeId}?autoplay=1&mute=1&playsinline=1&loop=1&playlist=${youtubeId}&controls=0&rel=0&enablejsapi=1&origin=${encodeURIComponent(window.location.origin)}`}
+            src={`https://www.youtube.com/embed/${youtubeId}?autoplay=1&mute=1&playsinline=1&loop=1&playlist=${youtubeId}&controls=0&rel=0&cc_load_policy=0&iv_load_policy=3&enablejsapi=1&origin=${encodeURIComponent(window.location.origin)}`}
             title="Banner video"
             allow="autoplay; encrypted-media; picture-in-picture"
             referrerPolicy="strict-origin-when-cross-origin"
