@@ -1,13 +1,20 @@
 "use client"
 import Image from "next/image"
 import Link from "next/link"
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { getBanner, getButtonText, getText } from "@/service/homeService"
 import { getMediaUrl } from "@/utils/mediaUrl"
 
 function youtubeVideoId(url: string) {
   const match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^#&?]{11})/)
   return match?.[1] || ""
+}
+
+// Browsers only allow sound after the visitor has clicked, tapped or pressed a key on the page.
+function pageHasUserActivation() {
+  if (typeof navigator === "undefined") return false
+  const activation = (navigator as Navigator & { userActivation?: { hasBeenActive: boolean } }).userActivation
+  return Boolean(activation?.hasBeenActive)
 }
 
 export default function HeroSection() {
@@ -22,6 +29,9 @@ export default function HeroSection() {
   const [bannerSubText, setBannerSubText] = useState<string>("")
   const [location, setLocation] = useState<string>("")
   const [bannerLink, setBannerLink] = useState<string>("")
+  const [soundOn, setSoundOn] = useState(false)
+  const youtubeFrameRef = useRef<HTMLIFrameElement>(null)
+  const fileVideoRef = useRef<HTMLVideoElement>(null)
 
   useEffect(() => {
     async function fetchBanner() {
@@ -98,6 +108,66 @@ export default function HeroSection() {
     : null
   const showYoutube = playVideo && !videoFailed && Boolean(youtubeId)
   const showFileVideo = playVideo && !videoFailed && !youtubeId && Boolean(fileVideoSrc)
+  const videoPlaying = showYoutube || showFileVideo
+
+  // Turn sound on when the video starts if the browser already allows it,
+  // otherwise on the visitor's first click, tap or key press.
+  useEffect(() => {
+    if (!videoPlaying) return
+    if (pageHasUserActivation()) {
+      setSoundOn(true)
+      return
+    }
+    const enableSound = () => setSoundOn(true)
+    const events = ["pointerdown", "keydown", "touchstart"] as const
+    events.forEach((name) => window.addEventListener(name, enableSound, { once: true }))
+    return () => events.forEach((name) => window.removeEventListener(name, enableSound))
+  }, [videoPlaying])
+
+  const sendYoutubeCommand = (func: string, args: unknown[] = []) => {
+    youtubeFrameRef.current?.contentWindow?.postMessage(
+      JSON.stringify({ event: "command", func, args }),
+      "https://www.youtube.com"
+    )
+  }
+
+  const applyYoutubeSound = () => {
+    // Captions get cut off when the video is cropped to fill the banner, so keep them off.
+    sendYoutubeCommand("unloadModule", ["captions"])
+    sendYoutubeCommand("unloadModule", ["cc"])
+    if (soundOn) {
+      sendYoutubeCommand("unMute")
+      sendYoutubeCommand("setVolume", [100])
+      sendYoutubeCommand("playVideo")
+    } else {
+      sendYoutubeCommand("mute")
+    }
+  }
+
+  useEffect(() => {
+    if (!showYoutube) return
+    applyYoutubeSound()
+    // The player may still be starting up; repeat once so the command is not lost.
+    const retry = window.setTimeout(applyYoutubeSound, 1000)
+    return () => window.clearTimeout(retry)
+  }, [showYoutube, soundOn])
+
+  useEffect(() => {
+    const video = fileVideoRef.current
+    if (!showFileVideo || !video) return
+    video.muted = !soundOn
+    video.play().catch(() => {
+      // Sound was blocked by the browser: keep playing muted, then unmute on the next interaction.
+      video.muted = true
+      video.play().catch(() => setVideoFailed(true))
+      const unmute = () => {
+        video.muted = false
+      }
+      ;["pointerdown", "keydown", "touchstart"].forEach((name) =>
+        window.addEventListener(name, unmute, { once: true })
+      )
+    })
+  }, [showFileVideo, soundOn])
 
   return (
     <section className="relative h-[60vh] sm:h-[70vh] md:h-[80vh] lg:h-screen w-full flex items-center justify-center text-center overflow-hidden">
@@ -118,26 +188,29 @@ export default function HeroSection() {
       {showYoutube && (
         <div className="absolute inset-0 overflow-hidden" style={{ zIndex: -1 }}>
           <iframe
+            ref={youtubeFrameRef}
             className="absolute left-1/2 top-1/2 h-[56.25vw] min-h-full w-[177.78vh] min-w-full -translate-x-1/2 -translate-y-1/2"
-            src={`https://www.youtube.com/embed/${youtubeId}?autoplay=1&mute=1&playsinline=1&loop=1&playlist=${youtubeId}&controls=0&rel=0`}
+            src={`https://www.youtube.com/embed/${youtubeId}?autoplay=1&mute=1&playsinline=1&loop=1&playlist=${youtubeId}&controls=0&rel=0&cc_load_policy=0&iv_load_policy=3&enablejsapi=1&origin=${encodeURIComponent(window.location.origin)}`}
             title="Banner video"
             allow="autoplay; encrypted-media; picture-in-picture"
             referrerPolicy="strict-origin-when-cross-origin"
+            onLoad={applyYoutubeSound}
           />
         </div>
       )}
       {showFileVideo && fileVideoSrc && (
         <video
+          ref={fileVideoRef}
           className="absolute inset-0 h-full w-full object-cover"
           style={{ zIndex: -1 }}
           src={fileVideoSrc}
-          autoPlay
           muted
           playsInline
           loop
           onError={() => setVideoFailed(true)}
         />
       )}
+
 
       {/* Content — only show fields provided by API (no hardcoded fallbacks) */}
       <div className="relative z-10 p-4 sm:p-6 md:p-8 lg:p-12 space-y-4 sm:space-y-6 text-[#6A1B1A] animate-fade-in pb-8 lg:pb-12 xl:pb-40">
