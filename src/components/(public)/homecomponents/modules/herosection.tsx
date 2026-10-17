@@ -18,13 +18,9 @@ const YOUTUBE_PAUSED = 2
 const SOUND_GESTURE_EVENTS = ["click", "touchend", "keydown"] as const
 // If YouTube has not started playing by then (autoplay blocked, YouTube unreachable), keep the image.
 const YOUTUBE_START_TIMEOUT_MS = 10000
+// How long the image stays after YouTube starts while the automatic sound attempt settles.
+const YOUTUBE_SOUND_SETTLE_MS = 700
 
-// Browsers only allow sound after the visitor has clicked, tapped or pressed a key on the page.
-function pageHasUserActivation() {
-  if (typeof navigator === "undefined") return false
-  const activation = (navigator as Navigator & { userActivation?: { hasBeenActive: boolean } }).userActivation
-  return Boolean(activation?.hasBeenActive)
-}
 
 export default function HeroSection() {
   const [bannerUrl, setBannerUrl] = useState<string | null>(null)
@@ -172,6 +168,8 @@ export default function HeroSection() {
     youtubeMutedRef.current = true
 
     let playerState = -1
+    let autoSoundTried = false
+    let revealTimer: number | undefined
     const updateSoundConfirmed = () => {
       if (playerState === YOUTUBE_PLAYING && !youtubeMutedRef.current) soundConfirmedRef.current = true
     }
@@ -180,8 +178,17 @@ export default function HeroSection() {
       if (state === playerState) return
       playerState = state
       if (state === YOUTUBE_PLAYING) {
-        markVideoStarted()
         updateSoundConfirmed()
+        // Try sound once by itself as soon as the video plays; if the browser refuses, the pause
+        // handler below resumes it muted and clicks/taps retry. The image stays a moment longer
+        // so that brief refused-pause is not visible.
+        if (!autoSoundTried && wantSoundRef.current && !soundConfirmedRef.current) {
+          autoSoundTried = true
+          unmuteYoutube()
+          revealTimer = window.setTimeout(markVideoStarted, YOUTUBE_SOUND_SETTLE_MS)
+        } else {
+          markVideoStarted()
+        }
       } else if (state === YOUTUBE_PAUSED) {
         // Nothing on the page pauses the banner, so a pause means the browser refused the sound:
         // keep the video going muted and try sound again on the next click/tap.
@@ -207,7 +214,8 @@ export default function HeroSection() {
         // Captions get cut off when the video is cropped to fill the banner, so keep them off.
         sendYoutubeCommand("unloadModule", ["captions"])
         sendYoutubeCommand("unloadModule", ["cc"])
-        if (wantSoundRef.current) unmuteYoutube()
+        // Sound is only requested once the video is playing: unmuting before that makes
+        // YouTube refuse to autoplay at all.
       }
 
       const info = data.info
@@ -240,6 +248,7 @@ export default function HeroSection() {
       window.removeEventListener("message", onMessage)
       window.clearInterval(handshake)
       window.clearTimeout(fallback)
+      window.clearTimeout(revealTimer)
     }
   }, [showYoutube])
 
@@ -259,11 +268,12 @@ export default function HeroSection() {
       })
   }, [showFileVideo])
 
-  // Turn sound on at once if the visitor already clicked on the site, otherwise on every
-  // click/tap/key press until sound is actually playing (a scroll or refused attempt retries).
+  // Always try sound as soon as the video plays (works wherever the browser allows it). If the
+  // browser refuses, the video keeps playing muted and every click/tap/key press retries until
+  // sound is actually playing.
   useEffect(() => {
     if (!videoPlaying) return
-    wantSoundRef.current = pageHasUserActivation()
+    wantSoundRef.current = true
     const onGesture = () => {
       if (soundConfirmedRef.current) return
       wantSoundRef.current = true
