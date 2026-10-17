@@ -10,12 +10,17 @@ function youtubeVideoId(url: string) {
   return match?.[1] || ""
 }
 
-// Browsers only allow sound after the visitor has clicked, tapped or pressed a key on the page.
-function pageHasUserActivation() {
-  if (typeof navigator === "undefined") return false
-  const activation = (navigator as Navigator & { userActivation?: { hasBeenActive: boolean } }).userActivation
-  return Boolean(activation?.hasBeenActive)
-}
+const YOUTUBE_ORIGIN = "https://www.youtube.com"
+const YOUTUBE_PLAYING = 1
+const YOUTUBE_PAUSED = 2
+// Events that browsers count as a real click/tap for allowing sound
+// (pointerdown/touchstart do not count on phones).
+const SOUND_GESTURE_EVENTS = ["click", "touchend", "keydown"] as const
+// If YouTube has not started playing by then (autoplay blocked, YouTube unreachable), keep the image.
+const YOUTUBE_START_TIMEOUT_MS = 10000
+// How long the image stays after YouTube starts while the automatic sound attempt settles.
+const YOUTUBE_SOUND_SETTLE_MS = 700
+
 
 export default function HeroSection() {
   const [bannerUrl, setBannerUrl] = useState<string | null>(null)
@@ -29,9 +34,15 @@ export default function HeroSection() {
   const [bannerSubText, setBannerSubText] = useState<string>("")
   const [location, setLocation] = useState<string>("")
   const [bannerLink, setBannerLink] = useState<string>("")
-  const [soundOn, setSoundOn] = useState(false)
+  // True once the video is actually playing; until then the banner image stays visible.
+  const [videoStarted, setVideoStarted] = useState(false)
   const youtubeFrameRef = useRef<HTMLIFrameElement>(null)
   const fileVideoRef = useRef<HTMLVideoElement>(null)
+  const videoStartedRef = useRef(false)
+  const wantSoundRef = useRef(false)
+  const soundConfirmedRef = useRef(false)
+  const youtubeReadyRef = useRef(false)
+  const youtubeMutedRef = useRef(true)
 
   useEffect(() => {
     async function fetchBanner() {
@@ -44,6 +55,9 @@ export default function HeroSection() {
           setBannerYoutubeUrl(bannerData.youtube_url || null)
           setPlayVideo(false)
           setVideoFailed(false)
+          setVideoStarted(false)
+          videoStartedRef.current = false
+          soundConfirmedRef.current = false
           setImageError(false)
         }
       }
@@ -110,68 +124,169 @@ export default function HeroSection() {
   const showFileVideo = playVideo && !videoFailed && !youtubeId && Boolean(fileVideoSrc)
   const videoPlaying = showYoutube || showFileVideo
 
-  // Turn sound on when the video starts if the browser already allows it,
-  // otherwise on the visitor's first click, tap or key press.
-  useEffect(() => {
-    if (!videoPlaying) return
-    if (pageHasUserActivation()) {
-      setSoundOn(true)
-      return
-    }
-    const enableSound = () => setSoundOn(true)
-    const events = ["pointerdown", "keydown", "touchstart"] as const
-    events.forEach((name) => window.addEventListener(name, enableSound, { once: true }))
-    return () => events.forEach((name) => window.removeEventListener(name, enableSound))
-  }, [videoPlaying])
+  const markVideoStarted = () => {
+    if (videoStartedRef.current) return
+    videoStartedRef.current = true
+    setVideoStarted(true)
+  }
 
   const sendYoutubeCommand = (func: string, args: unknown[] = []) => {
     youtubeFrameRef.current?.contentWindow?.postMessage(
       JSON.stringify({ event: "command", func, args }),
-      "https://www.youtube.com"
+      YOUTUBE_ORIGIN
     )
   }
 
-  const applyYoutubeSound = () => {
-    // Captions get cut off when the video is cropped to fill the banner, so keep them off.
-    sendYoutubeCommand("unloadModule", ["captions"])
-    sendYoutubeCommand("unloadModule", ["cc"])
-    if (soundOn) {
-      sendYoutubeCommand("unMute")
-      sendYoutubeCommand("setVolume", [100])
-      sendYoutubeCommand("playVideo")
-    } else {
-      sendYoutubeCommand("mute")
-    }
+  const unmuteYoutube = () => {
+    // Commands sent before the player is ready are lost; the ready handler applies sound instead.
+    if (!youtubeReadyRef.current) return
+    sendYoutubeCommand("unMute")
+    sendYoutubeCommand("setVolume", [100])
+    sendYoutubeCommand("playVideo")
   }
 
+  // Must run inside the click/tap handler itself, otherwise browsers block the sound.
+  const unmuteFileVideo = () => {
+    const video = fileVideoRef.current
+    if (!video) return
+    video.muted = false
+    video
+      .play()
+      .then(() => {
+        soundConfirmedRef.current = true
+      })
+      .catch(() => {
+        video.muted = true
+        video.play().catch(() => {})
+      })
+  }
+
+  // YouTube player: handshake, wait until ready, track playing/muted state, fall back to the image.
   useEffect(() => {
     if (!showYoutube) return
-    applyYoutubeSound()
-    // The player may still be starting up; repeat once so the command is not lost.
-    const retry = window.setTimeout(applyYoutubeSound, 1000)
-    return () => window.clearTimeout(retry)
-  }, [showYoutube, soundOn])
+    youtubeReadyRef.current = false
+    youtubeMutedRef.current = true
 
+    let playerState = -1
+    let autoSoundTried = false
+    let revealTimer: number | undefined
+    const updateSoundConfirmed = () => {
+      if (playerState === YOUTUBE_PLAYING && !youtubeMutedRef.current) soundConfirmedRef.current = true
+    }
+
+    const handlePlayerState = (state: number) => {
+      if (state === playerState) return
+      playerState = state
+      if (state === YOUTUBE_PLAYING) {
+        updateSoundConfirmed()
+        // Try sound once by itself as soon as the video plays; if the browser refuses, the pause
+        // handler below resumes it muted and clicks/taps retry. The image stays a moment longer
+        // so that brief refused-pause is not visible.
+        if (!autoSoundTried && wantSoundRef.current && !soundConfirmedRef.current) {
+          autoSoundTried = true
+          unmuteYoutube()
+          revealTimer = window.setTimeout(markVideoStarted, YOUTUBE_SOUND_SETTLE_MS)
+        } else {
+          markVideoStarted()
+        }
+      } else if (state === YOUTUBE_PAUSED) {
+        // Nothing on the page pauses the banner, so a pause means the browser refused the sound:
+        // keep the video going muted and try sound again on the next click/tap.
+        soundConfirmedRef.current = false
+        sendYoutubeCommand("mute")
+        sendYoutubeCommand("playVideo")
+      }
+    }
+
+    const onMessage = (event: MessageEvent) => {
+      if (event.origin !== YOUTUBE_ORIGIN || event.source !== youtubeFrameRef.current?.contentWindow) return
+      let data: { event?: string; info?: unknown }
+      try {
+        data = typeof event.data === "string" ? JSON.parse(event.data) : event.data
+      } catch {
+        return
+      }
+      if (!data || typeof data !== "object") return
+
+      if (!youtubeReadyRef.current) {
+        youtubeReadyRef.current = true
+        sendYoutubeCommand("addEventListener", ["onStateChange"])
+        // Captions get cut off when the video is cropped to fill the banner, so keep them off.
+        sendYoutubeCommand("unloadModule", ["captions"])
+        sendYoutubeCommand("unloadModule", ["cc"])
+        // Sound is only requested once the video is playing: unmuting before that makes
+        // YouTube refuse to autoplay at all.
+      }
+
+      const info = data.info
+      if (data.event === "onStateChange" && typeof info === "number") {
+        handlePlayerState(info)
+      } else if (info && typeof info === "object") {
+        const details = info as { muted?: unknown; playerState?: unknown }
+        if (typeof details.playerState === "number") handlePlayerState(details.playerState)
+        if (typeof details.muted === "boolean") {
+          youtubeMutedRef.current = details.muted
+          updateSoundConfirmed()
+        }
+      }
+    }
+
+    window.addEventListener("message", onMessage)
+    // Keep announcing until the player answers, the same way YouTube's own API connects.
+    const handshake = window.setInterval(() => {
+      if (youtubeReadyRef.current) return window.clearInterval(handshake)
+      youtubeFrameRef.current?.contentWindow?.postMessage(
+        JSON.stringify({ event: "listening", id: 1, channel: "widget" }),
+        YOUTUBE_ORIGIN
+      )
+    }, 250)
+    const fallback = window.setTimeout(() => {
+      if (!videoStartedRef.current) setVideoFailed(true)
+    }, YOUTUBE_START_TIMEOUT_MS)
+
+    return () => {
+      window.removeEventListener("message", onMessage)
+      window.clearInterval(handshake)
+      window.clearTimeout(fallback)
+      window.clearTimeout(revealTimer)
+    }
+  }, [showYoutube])
+
+  // Uploaded video: try with sound first (some browsers allow it), otherwise play muted.
   useEffect(() => {
     const video = fileVideoRef.current
     if (!showFileVideo || !video) return
-    video.muted = !soundOn
-    video.play().catch(() => {
-      // Sound was blocked by the browser: keep playing muted, then unmute on the next interaction.
-      video.muted = true
-      video.play().catch(() => setVideoFailed(true))
-      const unmute = () => {
-        video.muted = false
-      }
-      ;["pointerdown", "keydown", "touchstart"].forEach((name) =>
-        window.addEventListener(name, unmute, { once: true })
-      )
-    })
-  }, [showFileVideo, soundOn])
+    video.muted = false
+    video
+      .play()
+      .then(() => {
+        soundConfirmedRef.current = true
+      })
+      .catch(() => {
+        video.muted = true
+        video.play().catch(() => setVideoFailed(true))
+      })
+  }, [showFileVideo])
+
+  // Always try sound as soon as the video plays (works wherever the browser allows it). If the
+  // browser refuses, the video keeps playing muted and every click/tap/key press retries until
+  // sound is actually playing.
+  useEffect(() => {
+    if (!videoPlaying) return
+    wantSoundRef.current = true
+    const onGesture = () => {
+      if (soundConfirmedRef.current) return
+      wantSoundRef.current = true
+      if (showFileVideo) unmuteFileVideo()
+      else unmuteYoutube()
+    }
+    SOUND_GESTURE_EVENTS.forEach((name) => window.addEventListener(name, onGesture, true))
+    return () => SOUND_GESTURE_EVENTS.forEach((name) => window.removeEventListener(name, onGesture, true))
+  }, [videoPlaying, showFileVideo])
 
   return (
     <section className="relative h-[60vh] sm:h-[70vh] md:h-[80vh] lg:h-screen w-full flex items-center justify-center text-center overflow-hidden">
-      {imageSrc && !showYoutube && !showFileVideo && (
+      {imageSrc && !(videoPlaying && videoStarted) && (
         <Image
           src={imageSrc}
           alt="Arunachal Literature Festival Background"
@@ -186,7 +301,11 @@ export default function HeroSection() {
         />
       )}
       {showYoutube && (
-        <div className="absolute inset-0 overflow-hidden" style={{ zIndex: -1 }}>
+        // pointer-events-none: taps go to the page (so they can turn sound on) instead of pausing YouTube.
+        <div
+          className="pointer-events-none absolute inset-0 overflow-hidden"
+          style={{ zIndex: -1, opacity: videoStarted ? 1 : 0 }}
+        >
           <iframe
             ref={youtubeFrameRef}
             className="absolute left-1/2 top-1/2 h-[56.25vw] min-h-full w-[177.78vh] min-w-full -translate-x-1/2 -translate-y-1/2"
@@ -194,7 +313,6 @@ export default function HeroSection() {
             title="Banner video"
             allow="autoplay; encrypted-media; picture-in-picture"
             referrerPolicy="strict-origin-when-cross-origin"
-            onLoad={applyYoutubeSound}
           />
         </div>
       )}
@@ -202,11 +320,13 @@ export default function HeroSection() {
         <video
           ref={fileVideoRef}
           className="absolute inset-0 h-full w-full object-cover"
-          style={{ zIndex: -1 }}
+          style={{ zIndex: -1, opacity: videoStarted ? 1 : 0 }}
           src={fileVideoSrc}
           muted
           playsInline
           loop
+          preload="auto"
+          onPlaying={markVideoStarted}
           onError={() => setVideoFailed(true)}
         />
       )}
