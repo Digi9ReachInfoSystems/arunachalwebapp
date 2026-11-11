@@ -35,9 +35,9 @@ function RegistrationSkeleton() {
         </div>
         <div className="text-center mb-12">
           <div className="h-6 w-48 mx-auto mb-8 rounded bg-gray-200 animate-pulse" />
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto justify-center">
-            {[1, 2, 3].map((_, idx) => (
-              <div key={idx} className="bg-gray-200 border-4 border-gray-200 animate-pulse h-[420px] rounded-2xl w-full max-w-xs mx-auto" />
+          <div className="flex flex-col gap-8 max-w-4xl mx-auto">
+            {[1, 2].map((_, idx) => (
+              <div key={idx} className="bg-gray-200 border-4 border-gray-200 animate-pulse aspect-video rounded-2xl w-full" />
             ))}
           </div>
           
@@ -188,30 +188,20 @@ export default function RegistrationSection() {
           {/* Workshop Selection */}
           <div className="text-center mb-12">
             {/* <h3 className="text-xl font-semibold text-gray-800 mb-8 font-dm-serif">Select your Workshop:</h3> */}
-            <div className={`grid gap-8 max-w-6xl mx-auto ${
-              currentWorkshops.length === 1 
-                ? 'grid-cols-1 justify-center' 
-                : currentWorkshops.length === 2 
-                  ? 'grid-cols-1 md:grid-cols-2 justify-center' 
-                  : 'grid-cols-1 md:grid-cols-3'
-            }`}>
+            <div className="flex flex-col gap-8 max-w-4xl mx-auto">
               {currentWorkshops.map((workshop: Workshop, index: number) => (
                 <div key={workshop._id ?? index} className="relative">
                   {/* Image Card (rectangle, image only) */}
                   <div
-                    className={`bg-white border-4 border-[#FFD76B] p-3 flex items-center justify-center relative overflow-hidden rounded-2xl w-full max-w-xs mx-auto ${
-                      currentWorkshops.length === 1 
-                        ? 'h-[450px]' 
-                        : 'h-[420px]'
-                    }`}
+                    className="bg-white border-4 border-[#FFD76B] relative overflow-hidden rounded-2xl w-full aspect-video shadow-md"
                   >
-                    <div className="relative w-full h-full">
+                    <div className="absolute inset-0">
                       <Image
                         src={getMediaUrl(workshop.imageUrl) || "/registration/creative.png"}
                         alt={workshop.name}
                         fill
-                        sizes="(max-width: 768px) 100vw, 320px"
-                        className="object-contain rounded-lg"
+                        sizes="(max-width: 1024px) 100vw, 896px"
+                        className="object-cover"
                       />
                     </div>
                   </div>
