@@ -115,10 +115,10 @@ export default function WorkshopsManagement() {
       if (workshopsResponse.success && workshopsResponse.data) {
         setWorkshops(workshopsResponse.data)
       } else {
-        setError(workshopsResponse.error || "Failed to fetch workshops")
+        setError(workshopsResponse.error || "Failed to fetch items")
         toast({
           title: "Error",
-          description: workshopsResponse.error || "Failed to fetch workshops",
+          description: workshopsResponse.error || "Failed to fetch items",
         })
       }
 
@@ -160,18 +160,18 @@ export default function WorkshopsManagement() {
         setWorkshops(workshops.filter((w) => w._id !== workshopToDelete._id))
         toast({
           title: "Success",
-          description: "Workshop deleted successfully",
+          description: "Item deleted successfully",
         })
       } else {
         toast({
           title: "Error",
-          description: response.error || "Failed to delete workshop",
+          description: response.error || "Failed to delete item",
         })
       }
     } catch (error) {
       toast({
         title: "Error",
-        description: "Failed to delete workshop",
+        description: "Failed to delete item",
       })
     } finally {
       setDeleting(false)
@@ -198,9 +198,9 @@ export default function WorkshopsManagement() {
       ) : (
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 w-full max-w-full">
           <div className="min-w-0">
-            <h1 className="text-2xl md:text-3xl font-bold tracking-tight truncate">Workshops Management</h1>
+            <h1 className="text-2xl md:text-3xl font-bold tracking-tight truncate">Children&apos;s Corner</h1>
             <p className="text-muted-foreground text-sm md:text-base truncate">
-              Manage workshops, registrations, and participant data.
+              Manage Children&apos;s Corner items and section title.
             </p>
           </div>
           {/* Responsive button group: stack on mobile, row on sm+ */}
@@ -217,7 +217,7 @@ export default function WorkshopsManagement() {
             <Button asChild className="w-full sm:w-auto" suppressHydrationWarning={true}>
               <Link href="/admin/dashboard/workshops/create">
                 <Plus className="mr-2 h-4 w-4" />
-                Create Workshop
+                Add Item
               </Link>
             </Button>
           </div>
@@ -232,7 +232,7 @@ export default function WorkshopsManagement() {
           <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 w-full min-w-[320px]">
             <Card className="w-full">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Workshops</CardTitle>
+                <CardTitle className="text-sm font-medium">Total Items</CardTitle>
                 <BookOpen className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
@@ -259,7 +259,7 @@ export default function WorkshopsManagement() {
                 <div className="text-2xl font-bold">
                   {workshops.length > 0 ? new Date(workshops[0].createdAt).toLocaleDateString() : "N/A"}
                 </div>
-                <p className="text-xs text-muted-foreground">Last workshop created</p>
+                <p className="text-xs text-muted-foreground">Last item created</p>
               </CardContent>
             </Card>
           </div>
@@ -301,7 +301,7 @@ export default function WorkshopsManagement() {
       {/* Search */}
       <Card className="w-full max-w-full">
         <CardHeader>
-          <CardTitle className="text-lg">Search Workshops</CardTitle>
+          <CardTitle className="text-lg">Search</CardTitle>
         </CardHeader>
         <CardContent>
           {shouldShowSkeleton ? (
@@ -310,7 +310,7 @@ export default function WorkshopsManagement() {
             <div className="flex gap-4 w-full max-w-full">
               <div className="flex-1 min-w-0">
                 <Label htmlFor="search" className="sr-only">
-                  Search workshops
+                  Search items
                 </Label>
                 <div className="relative">
                   <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -331,9 +331,9 @@ export default function WorkshopsManagement() {
       {/* Workshops List */}
       <Card className="w-full max-w-full">
         <CardHeader>
-          <CardTitle className="text-lg">All Workshops</CardTitle>
+          <CardTitle className="text-lg">All Children&apos;s Corner Items</CardTitle>
           <CardDescription>
-            {shouldShowSkeleton ? "Loading..." : `${filteredWorkshops.length} workshop${filteredWorkshops.length !== 1 ? "s" : ""} found`}
+            {shouldShowSkeleton ? "Loading..." : `${filteredWorkshops.length} item${filteredWorkshops.length !== 1 ? "s" : ""} found`}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -344,16 +344,16 @@ export default function WorkshopsManagement() {
               {filteredWorkshops.length === 0 ? (
                 <div className="text-center py-8">
                   <BookOpen className="mx-auto h-12 w-12 text-muted-foreground" />
-                  <h3 className="mt-2 text-sm font-semibold text-gray-900">No workshops found</h3>
+                  <h3 className="mt-2 text-sm font-semibold text-gray-900">No items found</h3>
                   <p className="mt-1 text-sm text-muted-foreground">
-                    {searchTerm ? "Try adjusting your search terms." : "Get started by creating a new workshop."}
+                    {searchTerm ? "Try adjusting your search terms." : "Get started by adding a new item."}
                   </p>
                   {!searchTerm && (
                     <div className="mt-6">
                       <Button asChild>
                         <Link href="/admin/dashboard/workshops/create" suppressHydrationWarning={true}>
                           <Plus className="mr-2 h-4 w-4" />
-                          Create Workshop
+                          Add Item
                         </Link>
                       </Button>
                     </div>
@@ -437,8 +437,8 @@ export default function WorkshopsManagement() {
                             </DropdownMenuItem>
                           ) : (
                             <ContactAdminModal
-                              title="Delete Workshop Access Denied"
-                              description="You don't have permission to delete workshops. Please contact the administrator for assistance."
+                              title="Delete Access Denied"
+                              description="You don't have permission to delete items. Please contact the administrator for assistance."
                             >
                               <DropdownMenuItem className="text-red-600">
                                 <Trash2 className="mr-2 h-4 w-4" />
@@ -462,7 +462,7 @@ export default function WorkshopsManagement() {
           <AlertDialogHeader>
             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the workshop "{workshopToDelete?.name}".
+              This action cannot be undone. This will permanently delete "{workshopToDelete?.name}".
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
