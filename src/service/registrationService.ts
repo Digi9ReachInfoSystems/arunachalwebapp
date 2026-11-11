@@ -56,7 +56,8 @@ export async function updateWorkshop(workshopId: string, data: UpdateWorkshopDat
     
     if (data.name) formData.append("name", data.name)
     if (data.about) formData.append("about", data.about)
-    if (data.registrationFormUrl) formData.append("registrationFormUrl", data.registrationFormUrl)
+    // Optional field: send even when empty so it can be cleared
+    if (data.registrationFormUrl !== undefined) formData.append("registrationFormUrl", data.registrationFormUrl)
 
     if (data.imageUrl && data.imageUrl.startsWith('data:')) {
       const response = await fetch(data.imageUrl)

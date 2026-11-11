@@ -22,7 +22,9 @@ export function DynamicBreadcrumb() {
   const items = [
     { label: 'Admin Panel', href: '/admin/dashboard' },
     ...meaningfulSegments.map((seg, idx) => {
-      const label = seg.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+      const label = seg === 'workshops'
+        ? "Children's Corner"
+        : seg.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
       const href = '/admin/dashboard/' + meaningfulSegments.slice(0, idx + 1).join('/');
       return { label, href };
     })
