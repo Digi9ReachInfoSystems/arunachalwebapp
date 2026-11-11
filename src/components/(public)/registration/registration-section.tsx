@@ -193,17 +193,16 @@ export default function RegistrationSection() {
                 <div key={workshop._id ?? index} className="relative">
                   {/* Image Card (rectangle, image only) */}
                   <div
-                    className="bg-white border-4 border-[#FFD76B] relative overflow-hidden rounded-2xl w-full aspect-video shadow-md"
+                    className="bg-white border-4 border-[#FFD76B] relative overflow-hidden rounded-2xl w-full shadow-md"
                   >
-                    <div className="absolute inset-0">
-                      <Image
+                    <Image
                         src={getMediaUrl(workshop.imageUrl) || "/registration/creative.png"}
                         alt={workshop.name}
-                        fill
+                        width={1600}
+                        height={900}
                         sizes="(max-width: 1024px) 100vw, 896px"
-                        className="object-cover"
+                        className="block w-full h-auto"
                       />
-                    </div>
                   </div>
                 </div>
               ))}
