@@ -20,7 +20,7 @@ function toTitleCase(str: string) {
   if (str.toLowerCase() === "team") {
     return "ALF Team";
   }
-  if (str.toLowerCase() === "workshops") {
+  if (str.toLowerCase() === "workshops" || str.toLowerCase() === "childrens-corner") {
     return "Children's Corner";
   }
   if (str.toLowerCase() === "blogscontent") {
