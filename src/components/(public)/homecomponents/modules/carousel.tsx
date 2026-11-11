@@ -316,14 +316,14 @@ export default function Carousel() {
               <button
                 onClick={prevSlide}
                 disabled={isLoading}
-                className={`absolute left-2 md:left-4 lg:-left-16 top-1/2 -translate-y-1/2 z-20 bg-[#e67e22] hover:bg-[#d35400] rounded-full p-3 flex items-center justify-center shadow-lg border-4 border-white transition-all duration-300 hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-[#e67e22] focus:ring-offset-2`}
+                className={`absolute left-2 md:left-4 lg:-left-16 top-1/2 -translate-y-1/2 z-20 bg-[#e67e22] hover:bg-[#d35400] rounded-full p-3 hidden sm:flex items-center justify-center shadow-lg border-4 border-white transition-all duration-300 hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-[#e67e22] focus:ring-offset-2`}
                 aria-label="Previous workshops"
               >
                 <ChevronLeft className="h-5 w-5 text-white" />
               </button>
 
               {/* Carousel Container */}
-              <div className="overflow-hidden w-full px-12 md:px-16 lg:px-20">
+              <div className="overflow-hidden w-full px-0 sm:px-16 lg:px-20">
                 <AnimatePresence mode="wait">
                   <motion.div
                     key={`${currentIndex}-${cardsPerView}`}
@@ -384,7 +384,7 @@ export default function Carousel() {
               <button
                 onClick={nextSlide}
                 disabled={isLoading}
-                className={`absolute right-2 md:right-4 lg:-right-16 top-1/2 -translate-y-1/2 z-20 bg-[#e67e22] hover:bg-[#d35400] rounded-full p-3 flex items-center justify-center shadow-lg border-4 border-white transition-all duration-300 hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-[#e67e22] focus:ring-offset-2`}
+                className={`absolute right-2 md:right-4 lg:-right-16 top-1/2 -translate-y-1/2 z-20 bg-[#e67e22] hover:bg-[#d35400] rounded-full p-3 hidden sm:flex items-center justify-center shadow-lg border-4 border-white transition-all duration-300 hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-[#e67e22] focus:ring-offset-2`}
                 aria-label="Next workshops"
               >
                 <ChevronRight className="h-5 w-5 text-white" />
