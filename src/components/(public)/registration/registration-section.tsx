@@ -138,10 +138,10 @@ export default function RegistrationSection() {
         <SunIcon size={24} className="opacity-80" />
       </div>
       {/* Optionally, mid-left and mid-right */}
-      <div className="absolute top-1/2 left-2 -translate-y-1/2 block md:hidden">
+      <div className="absolute top-1/2 left-2 -translate-y-1/2 hidden">
         <SunIcon size={20} className="opacity-70" />
       </div>
-      <div className="absolute top-1/2 right-2 -translate-y-1/2 block md:hidden">
+      <div className="absolute top-1/2 right-2 -translate-y-1/2 hidden">
         <SunIcon size={20} className="opacity-70" />
       </div>
       {/* Desktop: original sun icons */}
