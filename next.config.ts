@@ -13,6 +13,13 @@ const nextConfig: NextConfig = {
     },
   },
 
+  // Old Workshops page moved to Children's Corner; keep old links working
+  async redirects() {
+    return [
+      { source: "/workshops", destination: "/childrens-corner", permanent: true },
+    ];
+  },
+
   async headers() {
     return [
       {

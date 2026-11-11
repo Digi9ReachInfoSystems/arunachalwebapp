@@ -199,16 +199,16 @@ const adminNavData = {
       ]
     },
     {
-      title: "Workshops",
+      title: "Children's Corner",
       url: "/admin/dashboard/workshops",
       icon: BookOpen,
       items: [
         {
-          title: "All Workshops",
+          title: "All Items",
           url: "/admin/dashboard/workshops",
         },
         {
-          title: "Create Workshop",
+          title: "Add Item",
           url: "/admin/dashboard/workshops/create",
         },
       ],

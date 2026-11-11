@@ -56,7 +56,8 @@ export async function updateWorkshop(workshopId: string, data: UpdateWorkshopDat
     
     if (data.name) formData.append("name", data.name)
     if (data.about) formData.append("about", data.about)
-    if (data.registrationFormUrl) formData.append("registrationFormUrl", data.registrationFormUrl)
+    // Optional field: send even when empty so it can be cleared
+    if (data.registrationFormUrl !== undefined) formData.append("registrationFormUrl", data.registrationFormUrl)
 
     if (data.imageUrl && data.imageUrl.startsWith('data:')) {
       const response = await fetch(data.imageUrl)
@@ -110,6 +111,41 @@ export async function getEvents(): Promise<ApiResponse<Event[]>> {
     return {
       success: false,
       error: error.response?.data?.message || "Failed to fetch events",
+    }
+  }
+}
+
+// ---- Children's Corner section title (admin editable) ----
+export const DEFAULT_SECTION_TITLE = "CHILDREN'S CORNER"
+
+export async function getSectionTitle(): Promise<ApiResponse<string>> {
+  try {
+    const response = await apiClient.get("/registration/getSectionTitle")
+    return {
+      success: true,
+      data: response.data?.title || DEFAULT_SECTION_TITLE,
+    }
+  } catch (error: any) {
+    return {
+      success: false,
+      data: DEFAULT_SECTION_TITLE,
+      error: error.response?.data?.message || "Failed to fetch section title",
+    }
+  }
+}
+
+export async function updateSectionTitle(title: string): Promise<ApiResponse<string>> {
+  try {
+    const response = await apiClient.post("/registration/updateSectionTitle", { title })
+    return {
+      success: true,
+      data: response.data?.title || title,
+      message: response.data?.message || "Title updated successfully",
+    }
+  } catch (error: any) {
+    return {
+      success: false,
+      error: error.response?.data?.message || "Failed to update title",
     }
   }
 }

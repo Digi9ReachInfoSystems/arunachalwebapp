@@ -5,9 +5,10 @@ import { ChevronRight, ChevronLeft, ArrowUpRight } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import AOS from "aos"
 import "aos/dist/aos.css"
-import { getWorkshops } from "@/service/registrationService"
+import { getWorkshops, getSectionTitle, DEFAULT_SECTION_TITLE } from "@/service/registrationService"
 import type { Workshop } from "@/types/workshop-types"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { getMediaUrl } from "@/utils/mediaUrl"
 
 // Custom Sun Icon component (placeholder)
@@ -21,18 +22,14 @@ export default function Carousel() {
   const [currentIndex, setCurrentIndex] = useState(0)
   const [isLoading, setIsLoading] = useState(true)
   const [workshops, setWorkshops] = useState<Workshop[]>([])
+  const [sectionTitle, setSectionTitle] = useState(DEFAULT_SECTION_TITLE)
+  const router = useRouter()
 
   // Calculate how many cards to show based on screen size
-  const getCardsPerView = () => {
-    if (typeof window !== "undefined") {
-      if (window.innerWidth >= 1024) return 3 // Desktop: 3 cards
-      if (window.innerWidth >= 768) return 2 // Tablet: 2 cards
-      return 1 // Mobile: 1 card
-    }
-    return 3
-  }
+  // Children's Corner shows one wide 16:9 image per slide
+  const getCardsPerView = () => 1
 
-  const [cardsPerView, setCardsPerView] = useState(3)
+  const [cardsPerView, setCardsPerView] = useState(1)
   const lastCardsPerView = useRef(cardsPerView)
   const [isResizing, setIsResizing] = useState(false)
 
@@ -90,6 +87,10 @@ export default function Carousel() {
 
     fetchWorkshops()
 
+    getSectionTitle().then((res) => {
+      if (res.data) setSectionTitle(res.data)
+    })
+
     // Timeout fallback: if still loading after 5s, stop loading
     const loadingTimeout = setTimeout(() => {
       setIsLoading(false)
@@ -103,12 +104,7 @@ export default function Carousel() {
 
   // Loading skeleton component
   const LoadingSkeleton = () => (
-    <div className="bg-gray-200 border-4 border-gray-300 animate-pulse p-8 h-[420px] flex flex-col items-center justify-start relative overflow-visible rounded-t-full rounded-b-2xl w-full max-w-xs mx-auto">
-      <div className="mb-6 flex-1 flex items-center justify-center w-full">
-        <div className="w-[180px] h-[180px] rounded-full bg-gray-300 animate-pulse" />
-      </div>
-      <div className="h-6 w-32 rounded bg-gray-300 animate-pulse mt-2" />
-    </div>
+    <div className="bg-gray-200 border-4 border-gray-300 animate-pulse aspect-video rounded-2xl w-full max-w-4xl mx-auto" />
   )
 
   useEffect(() => {
@@ -126,13 +122,9 @@ export default function Carousel() {
     setCurrentIndex((prevIndex) => Math.min(prevIndex, maxIndex))
   }, [cardsPerView, workshops.length])
 
-  // Add handler for card click (same logic as registration-section.tsx)
-  const handleWorkshopClick = (workshop: Workshop) => {
-    if (workshop.registrationFormUrl) {
-      window.open(workshop.registrationFormUrl, '_blank', 'noopener,noreferrer')
-    } else {
-      window.open('/contactus', '_blank', 'noopener,noreferrer')
-    }
+  // Clicking an image opens the Children's Corner sub page
+  const handleWorkshopClick = () => {
+    router.push("/childrens-corner")
   }
 
   return (
@@ -263,13 +255,13 @@ export default function Carousel() {
                       ARUNACHAL LITERATURE FESTIVAL
                     </h2>
                     <h3 className="text-[#4F8049] text-2xl md:text-4xl uppercase font-semibold tracking-wide font-dm-serif">
-                      WORKSHOPS AND EVENTS
+                      {sectionTitle}
                     </h3>
                   </div>
                 </div>
       
                 <div data-aos="fade-up" data-aos-delay="400" data-aos-duration="1200" className="mt-8 flex justify-center">
-                  <Link href="/workshops" className="group relative flex items-center hover:scale-105 transition-transform duration-300 focus:outline-none">
+                  <Link href="/childrens-corner" className="group relative flex items-center hover:scale-105 transition-transform duration-300 focus:outline-none">
                     <span className="bg-[#4F8049] text-white px-8 py-3 rounded-full text-lg font-medium">
                       View All
                     </span>
@@ -281,11 +273,11 @@ export default function Carousel() {
               </div>
 
         {/* Workshops Display */}
-        <div className="relative mt-16 max-w-7xl mx-auto">
+        <div className="relative mt-16 max-w-5xl mx-auto">
           {workshops.length === 1 ? (
             /* Single Workshop - Centered Display */
             <div className="flex justify-center">
-              <div className="w-full max-w-xs">
+              <div className="w-full max-w-4xl">
                 {isLoading ? (
                   <LoadingSkeleton />
                 ) : (
@@ -297,25 +289,21 @@ export default function Carousel() {
                     data-aos-delay="200"
                   >
                     <div
-                      className="bg-white border-4 border-[#FFD76B] hover:border-[#e67e22] p-8 h-[420px] flex flex-col items-center justify-center relative overflow-hidden rounded-t-full rounded-b-2xl w-full mx-auto transition-all duration-300 hover:shadow-xl hover:scale-105 group cursor-pointer"
-                      onClick={() => handleWorkshopClick(workshops[0])}
+                      className="bg-white border-4 border-[#FFD76B] hover:border-[#e67e22] relative overflow-hidden rounded-2xl w-fit max-w-full mx-auto shadow-md transition-all duration-300 hover:shadow-xl cursor-pointer"
+                      onClick={handleWorkshopClick}
                       tabIndex={0}
-                      role="button"
-                      aria-label={`Register for ${workshops[0].name}`}
-                      onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') handleWorkshopClick(workshops[0]) }}
+                      role="link"
+                      aria-label={`Open ${sectionTitle}`}
+                      onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') handleWorkshopClick() }}
                     >
-                      <div className="mb-6 flex-1 flex items-center justify-center w-full">
-                        <Image
+                      <Image
                           src={getMediaUrl(workshops[0].imageUrl) || "/registration/creative.png"}
                           alt={workshops[0].name}
-                          width={180}
-                          height={180}
-                          className="object-contain drop-shadow-lg transition-transform duration-300"
+                          width={1600}
+                          height={900}
+                          sizes="(max-width: 1024px) 100vw, 896px"
+                          className="block w-auto h-auto max-w-full max-h-[260px] sm:max-h-[340px] md:max-h-[420px]"
                         />
-                      </div>
-                      <h4 className="text-lg font-bold text-gray-800 text-center leading-tight font-dm-serif mt-2 group-hover:text-[#e67e22] transition-colors duration-300 line-clamp-2">
-                        {workshops[0].name}
-                      </h4>
                     </div>
                   </motion.div>
                 )}
@@ -328,14 +316,14 @@ export default function Carousel() {
               <button
                 onClick={prevSlide}
                 disabled={isLoading}
-                className={`absolute left-2 md:left-4 lg:-left-16 top-1/2 -translate-y-1/2 z-20 bg-[#e67e22] hover:bg-[#d35400] rounded-full p-3 flex items-center justify-center shadow-lg border-4 border-white transition-all duration-300 hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-[#e67e22] focus:ring-offset-2`}
+                className={`absolute left-2 md:left-4 lg:-left-16 top-1/2 -translate-y-1/2 z-20 bg-[#e67e22] hover:bg-[#d35400] rounded-full p-3 hidden sm:flex items-center justify-center shadow-lg border-4 border-white transition-all duration-300 hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-[#e67e22] focus:ring-offset-2`}
                 aria-label="Previous workshops"
               >
                 <ChevronLeft className="h-5 w-5 text-white" />
               </button>
 
               {/* Carousel Container */}
-              <div className="overflow-hidden w-full px-12 md:px-16 lg:px-20">
+              <div className="overflow-hidden w-full px-0 sm:px-16 lg:px-20">
                 <AnimatePresence mode="wait">
                   <motion.div
                     key={`${currentIndex}-${cardsPerView}`}
@@ -370,26 +358,22 @@ export default function Carousel() {
                               data-aos-delay={100 * index}
                             >
                               <div
-                                className="bg-white border-4 border-[#FFD76B] hover:border-[#e67e22] p-8 h-[420px] flex flex-col items-center justify-center relative overflow-hidden rounded-t-full rounded-b-2xl w-full max-w-xs mx-auto transition-all duration-300 hover:shadow-xl hover:scale-105 group cursor-pointer"
-                                onClick={() => handleWorkshopClick(workshop)}
-                                tabIndex={0}
-                                role="button"
-                                aria-label={`Register for ${workshop.name}`}
-                                onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') handleWorkshopClick(workshop) }}
-                              >
-                                <div className="mb-6 flex-1 flex items-center justify-center w-full">
-                                  <Image
-                                    src={getMediaUrl(workshop.imageUrl) || "/registration/creative.png"}
-                                    alt={workshop.name}
-                                    width={180}
-                                    height={180}
-                                    className="object-contain drop-shadow-lg transition-transform duration-300"
-                                  />
-                                </div>
-                                <h4 className="text-lg font-bold text-gray-800 text-center leading-tight font-dm-serif mt-2 group-hover:text-[#e67e22] transition-colors duration-300 line-clamp-2">
-                                  {workshop.name}
-                                </h4>
-                              </div>
+                      className="bg-white border-4 border-[#FFD76B] hover:border-[#e67e22] relative overflow-hidden rounded-2xl w-fit max-w-full mx-auto shadow-md transition-all duration-300 hover:shadow-xl cursor-pointer"
+                      onClick={handleWorkshopClick}
+                      tabIndex={0}
+                      role="link"
+                      aria-label={`Open ${sectionTitle}`}
+                      onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') handleWorkshopClick() }}
+                    >
+                      <Image
+                          src={getMediaUrl(workshop.imageUrl) || "/registration/creative.png"}
+                          alt={workshop.name}
+                          width={1600}
+                          height={900}
+                          sizes="(max-width: 1024px) 100vw, 896px"
+                          className="block w-auto h-auto max-w-full max-h-[260px] sm:max-h-[340px] md:max-h-[420px]"
+                        />
+                    </div>
                             </motion.div>
                           ))}
                   </motion.div>
@@ -400,7 +384,7 @@ export default function Carousel() {
               <button
                 onClick={nextSlide}
                 disabled={isLoading}
-                className={`absolute right-2 md:right-4 lg:-right-16 top-1/2 -translate-y-1/2 z-20 bg-[#e67e22] hover:bg-[#d35400] rounded-full p-3 flex items-center justify-center shadow-lg border-4 border-white transition-all duration-300 hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-[#e67e22] focus:ring-offset-2`}
+                className={`absolute right-2 md:right-4 lg:-right-16 top-1/2 -translate-y-1/2 z-20 bg-[#e67e22] hover:bg-[#d35400] rounded-full p-3 hidden sm:flex items-center justify-center shadow-lg border-4 border-white transition-all duration-300 hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-[#e67e22] focus:ring-offset-2`}
                 aria-label="Next workshops"
               >
                 <ChevronRight className="h-5 w-5 text-white" />
@@ -410,7 +394,7 @@ export default function Carousel() {
 
           {/* Carousel Indicators - Only show for multiple workshops */}
           {workshops.length > 1 && (
-            <div className="flex justify-center mt-8 space-x-2 lg:hidden">
+            <div className="flex justify-center mt-8 space-x-2">
               {workshops.length > 0 &&
                 Array.from({
                   length: Math.ceil(Math.max(0, workshops.length - cardsPerView + 1)),

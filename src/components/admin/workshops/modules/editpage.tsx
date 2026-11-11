@@ -64,18 +64,18 @@ export default function EditWorkshop() {
             registrationFormUrl: foundWorkshop.registrationFormUrl,
           })
         } else {
-          setError("Workshop not found")
+          setError("Item not found")
           toast({
             title: "Error",
-            description: "Workshop not found",
+            description: "Item not found",
           })
           router.push("/admin/dashboard/workshops")
         }
       } else {
-        setError(workshopsResponse.error || "Failed to fetch workshop")
+        setError(workshopsResponse.error || "Failed to fetch item")
         toast({
           title: "Error",
-          description: workshopsResponse.error || "Failed to fetch workshop",
+          description: workshopsResponse.error || "Failed to fetch item",
         })
       }
 
@@ -86,7 +86,7 @@ export default function EditWorkshop() {
         console.warn("Failed to fetch events:", eventsResponse.error)
       }
     } catch (error) {
-      const errorMessage = "Failed to fetch workshop. Please check your connection."
+      const errorMessage = "Failed to fetch item. Please check your connection."
       setError(errorMessage)
       toast({
         title: "Error",
@@ -139,7 +139,7 @@ export default function EditWorkshop() {
     if (!formData.name?.trim()) {
       toast({
         title: "Validation Error",
-        description: "Workshop name is required",
+        description: "Name is required",
       })
       return false
     }
@@ -147,16 +147,17 @@ export default function EditWorkshop() {
     if (!formData.about?.trim()) {
       toast({
         title: "Validation Error",
-        description: "Workshop description is required",
+        description: "Description is required",
       })
       return false
     }
 
-    // Backend requires Google Forms URL
-    if (!formData.registrationFormUrl?.trim() || !formData.registrationFormUrl.startsWith('https://docs.google.com/forms/')) {
+    // Registration form URL is optional; if given it must be a Google Forms URL
+    const formUrl = formData.registrationFormUrl?.trim() || ""
+    if (formUrl && !formUrl.startsWith('https://docs.google.com/forms/')) {
       toast({
         title: "Validation Error",
-        description: "A valid Google Forms URL is required (must start with https://docs.google.com/forms/)",
+        description: "Registration Form URL must be a Google Forms link (https://docs.google.com/forms/...)",
       })
       return false
     }
@@ -199,7 +200,7 @@ export default function EditWorkshop() {
         console.log("Update successful, redirecting to workshops list")
         toast({
           title: "Success",
-          description: "Workshop updated successfully",
+          description: "Item updated successfully",
         })
         
         // Try different navigation approaches
@@ -215,7 +216,7 @@ export default function EditWorkshop() {
         console.error("API Error Response:", response)
         toast({
           title: "Error",
-          description: response.error || "Failed to update workshop",
+          description: response.error || "Failed to update item",
         })
       }
     } catch (error) {
@@ -247,9 +248,9 @@ export default function EditWorkshop() {
       ) : (
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 w-full max-w-full">
           <div className="min-w-0">
-            <h1 className="text-2xl md:text-3xl font-bold tracking-tight truncate">Edit Workshop</h1>
+            <h1 className="text-2xl md:text-3xl font-bold tracking-tight truncate">Edit Children&apos;s Corner Item</h1>
             <p className="text-muted-foreground text-sm md:text-base truncate">
-              Update workshop information and details.
+              Update item information and details.
             </p>
             {workshop && (
               <p className="text-sm text-muted-foreground mt-1 truncate">
@@ -271,7 +272,7 @@ export default function EditWorkshop() {
             <Button variant="outline" asChild className="w-full sm:w-auto bg-transparent" suppressHydrationWarning={true}>
               <Link href="/admin/dashboard/workshops">
                 <ArrowLeft className="mr-2 h-4 w-4" />
-                Back to Workshops
+                Back to Children&apos;s Corner
               </Link>
             </Button>
           </div>
@@ -283,9 +284,9 @@ export default function EditWorkshop() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <BookOpen className="h-5 w-5" />
-            Workshop Details
+            Item Details
           </CardTitle>
-          <CardDescription>Update the information for your workshop.</CardDescription>
+          <CardDescription>Update the information for this item.</CardDescription>
         </CardHeader>
         <CardContent>
           {shouldShowSkeleton ? (
@@ -294,11 +295,11 @@ export default function EditWorkshop() {
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="grid gap-6 md:grid-cols-2">
                 <div className="space-y-2">
-                  <Label htmlFor="name">Workshop Name *</Label>
+                  <Label htmlFor="name">Name *</Label>
                   <Input
                     id="name"
                     name="name"
-                    placeholder="Enter workshop name"
+                    placeholder="Enter name"
                     value={formData.name || ""}
                     onChange={handleChange}
                     required
@@ -319,11 +320,11 @@ export default function EditWorkshop() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="about">About Workshop *</Label>
+                <Label htmlFor="about">About *</Label>
                 <Textarea
                   id="about"
                   name="about"
-                  placeholder="Enter workshop description and details"
+                  placeholder="Enter description and details"
                   value={formData.about || ""}
                   onChange={handleChange}
                   rows={6}
@@ -333,7 +334,7 @@ export default function EditWorkshop() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="registrationFormUrl">Registration Form URL *</Label>
+                <Label htmlFor="registrationFormUrl">Registration Form URL (optional)</Label>
                 <Input
                   id="registrationFormUrl"
                   name="registrationFormUrl"
@@ -341,14 +342,13 @@ export default function EditWorkshop() {
                   placeholder="https://docs.google.com/forms/..."
                   value={formData.registrationFormUrl || ""}
                   onChange={handleChange}
-                  required
                   suppressHydrationWarning={true}
                 />
-                <p className="text-xs text-muted-foreground">Must be a valid Google Forms URL</p>
+                <p className="text-xs text-muted-foreground">Optional. If added, must be a Google Forms URL</p>
               </div>
 
               <div className="space-y-4">
-                <Label>Workshop Image</Label>
+                <Label>Image</Label>
                 <p className="text-xs text-muted-foreground">Upload a new image to replace the current one</p>
 
                 <div className="space-y-4">
@@ -357,7 +357,7 @@ export default function EditWorkshop() {
                     <div className="w-full max-w-md h-48 bg-muted rounded-md overflow-hidden border">
                       <img
                         src={getMediaUrl(workshop?.imageUrl || "") || "/placeholder.svg"}
-                        alt="Current workshop image"
+                        alt="Current image"
                         className="w-full h-full object-cover"
                         onError={(e) => {
                           const target = e.target as HTMLImageElement
@@ -414,7 +414,7 @@ export default function EditWorkshop() {
                       <div className="w-full max-w-md h-48 bg-muted rounded-md overflow-hidden border">
                         <img
                           src={uploadedImage}
-                          alt="New workshop preview"
+                          alt="New image preview"
                           className="w-full h-full object-cover"
                           onError={(e) => {
                             const target = e.target as HTMLImageElement
@@ -446,7 +446,7 @@ export default function EditWorkshop() {
                   ) : (
                     <>
                       <Save className="mr-2 h-4 w-4" />
-                      Update Workshop
+                      Update Item
                     </>
                   )}
                 </Button>
