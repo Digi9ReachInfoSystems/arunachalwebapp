@@ -289,22 +289,21 @@ export default function Carousel() {
                     data-aos-delay="200"
                   >
                     <div
-                      className="bg-white border-4 border-[#FFD76B] hover:border-[#e67e22] relative overflow-hidden rounded-2xl w-full max-w-4xl aspect-video mx-auto shadow-md transition-all duration-300 hover:shadow-xl cursor-pointer"
+                      className="bg-white border-4 border-[#FFD76B] hover:border-[#e67e22] relative overflow-hidden rounded-2xl w-full max-w-4xl mx-auto shadow-md transition-all duration-300 hover:shadow-xl cursor-pointer"
                       onClick={handleWorkshopClick}
                       tabIndex={0}
                       role="link"
                       aria-label={`Open ${sectionTitle}`}
                       onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') handleWorkshopClick() }}
                     >
-                      <div className="absolute inset-0">
-                        <Image
+                      <Image
                           src={getMediaUrl(workshops[0].imageUrl) || "/registration/creative.png"}
                           alt={workshops[0].name}
-                          fill
+                          width={1600}
+                          height={900}
                           sizes="(max-width: 1024px) 100vw, 896px"
-                          className="object-cover"
+                          className="block w-full h-auto"
                         />
-                      </div>
                     </div>
                   </motion.div>
                 )}
@@ -359,22 +358,21 @@ export default function Carousel() {
                               data-aos-delay={100 * index}
                             >
                               <div
-                      className="bg-white border-4 border-[#FFD76B] hover:border-[#e67e22] relative overflow-hidden rounded-2xl w-full max-w-4xl aspect-video mx-auto shadow-md transition-all duration-300 hover:shadow-xl cursor-pointer"
+                      className="bg-white border-4 border-[#FFD76B] hover:border-[#e67e22] relative overflow-hidden rounded-2xl w-full max-w-4xl mx-auto shadow-md transition-all duration-300 hover:shadow-xl cursor-pointer"
                       onClick={handleWorkshopClick}
                       tabIndex={0}
                       role="link"
                       aria-label={`Open ${sectionTitle}`}
                       onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') handleWorkshopClick() }}
                     >
-                      <div className="absolute inset-0">
-                        <Image
+                      <Image
                           src={getMediaUrl(workshop.imageUrl) || "/registration/creative.png"}
                           alt={workshop.name}
-                          fill
+                          width={1600}
+                          height={900}
                           sizes="(max-width: 1024px) 100vw, 896px"
-                          className="object-cover"
+                          className="block w-full h-auto"
                         />
-                      </div>
                     </div>
                             </motion.div>
                           ))}
