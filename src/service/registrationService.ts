@@ -113,3 +113,38 @@ export async function getEvents(): Promise<ApiResponse<Event[]>> {
     }
   }
 }
+
+// ---- Children's Corner section title (admin editable) ----
+export const DEFAULT_SECTION_TITLE = "CHILDREN'S CORNER"
+
+export async function getSectionTitle(): Promise<ApiResponse<string>> {
+  try {
+    const response = await apiClient.get("/registration/getSectionTitle")
+    return {
+      success: true,
+      data: response.data?.title || DEFAULT_SECTION_TITLE,
+    }
+  } catch (error: any) {
+    return {
+      success: false,
+      data: DEFAULT_SECTION_TITLE,
+      error: error.response?.data?.message || "Failed to fetch section title",
+    }
+  }
+}
+
+export async function updateSectionTitle(title: string): Promise<ApiResponse<string>> {
+  try {
+    const response = await apiClient.post("/registration/updateSectionTitle", { title })
+    return {
+      success: true,
+      data: response.data?.title || title,
+      message: response.data?.message || "Title updated successfully",
+    }
+  } catch (error: any) {
+    return {
+      success: false,
+      error: error.response?.data?.message || "Failed to update title",
+    }
+  }
+}
