@@ -26,16 +26,10 @@ export default function Carousel() {
   const router = useRouter()
 
   // Calculate how many cards to show based on screen size
-  const getCardsPerView = () => {
-    if (typeof window !== "undefined") {
-      if (window.innerWidth >= 1024) return 3 // Desktop: 3 cards
-      if (window.innerWidth >= 768) return 2 // Tablet: 2 cards
-      return 1 // Mobile: 1 card
-    }
-    return 3
-  }
+  // Children's Corner shows one wide 16:9 image per slide
+  const getCardsPerView = () => 1
 
-  const [cardsPerView, setCardsPerView] = useState(3)
+  const [cardsPerView, setCardsPerView] = useState(1)
   const lastCardsPerView = useRef(cardsPerView)
   const [isResizing, setIsResizing] = useState(false)
 
@@ -110,7 +104,7 @@ export default function Carousel() {
 
   // Loading skeleton component
   const LoadingSkeleton = () => (
-    <div className="bg-gray-200 border-4 border-gray-300 animate-pulse h-[420px] rounded-2xl w-full max-w-xs mx-auto" />
+    <div className="bg-gray-200 border-4 border-gray-300 animate-pulse aspect-video rounded-2xl w-full max-w-4xl mx-auto" />
   )
 
   useEffect(() => {
@@ -279,11 +273,11 @@ export default function Carousel() {
               </div>
 
         {/* Workshops Display */}
-        <div className="relative mt-16 max-w-7xl mx-auto">
+        <div className="relative mt-16 max-w-5xl mx-auto">
           {workshops.length === 1 ? (
             /* Single Workshop - Centered Display */
             <div className="flex justify-center">
-              <div className="w-full max-w-xs">
+              <div className="w-full max-w-4xl">
                 {isLoading ? (
                   <LoadingSkeleton />
                 ) : (
@@ -295,20 +289,20 @@ export default function Carousel() {
                     data-aos-delay="200"
                   >
                     <div
-                      className="bg-white border-4 border-[#FFD76B] hover:border-[#e67e22] p-3 h-[420px] flex items-center justify-center relative overflow-hidden rounded-2xl w-full mx-auto transition-all duration-300 hover:shadow-xl hover:scale-105 cursor-pointer"
+                      className="bg-white border-4 border-[#FFD76B] hover:border-[#e67e22] relative overflow-hidden rounded-2xl w-full max-w-4xl aspect-video mx-auto shadow-md transition-all duration-300 hover:shadow-xl cursor-pointer"
                       onClick={handleWorkshopClick}
                       tabIndex={0}
                       role="link"
                       aria-label={`Open ${sectionTitle}`}
                       onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') handleWorkshopClick() }}
                     >
-                      <div className="relative w-full h-full">
+                      <div className="absolute inset-0">
                         <Image
                           src={getMediaUrl(workshops[0].imageUrl) || "/registration/creative.png"}
                           alt={workshops[0].name}
                           fill
-                          sizes="(max-width: 768px) 100vw, 320px"
-                          className="object-contain rounded-lg"
+                          sizes="(max-width: 1024px) 100vw, 896px"
+                          className="object-cover"
                         />
                       </div>
                     </div>
@@ -365,20 +359,20 @@ export default function Carousel() {
                               data-aos-delay={100 * index}
                             >
                               <div
-                      className="bg-white border-4 border-[#FFD76B] hover:border-[#e67e22] p-3 h-[420px] flex items-center justify-center relative overflow-hidden rounded-2xl w-full max-w-xs mx-auto transition-all duration-300 hover:shadow-xl hover:scale-105 cursor-pointer"
+                      className="bg-white border-4 border-[#FFD76B] hover:border-[#e67e22] relative overflow-hidden rounded-2xl w-full max-w-4xl aspect-video mx-auto shadow-md transition-all duration-300 hover:shadow-xl cursor-pointer"
                       onClick={handleWorkshopClick}
                       tabIndex={0}
                       role="link"
                       aria-label={`Open ${sectionTitle}`}
                       onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') handleWorkshopClick() }}
                     >
-                      <div className="relative w-full h-full">
+                      <div className="absolute inset-0">
                         <Image
                           src={getMediaUrl(workshop.imageUrl) || "/registration/creative.png"}
                           alt={workshop.name}
                           fill
-                          sizes="(max-width: 768px) 100vw, 320px"
-                          className="object-contain rounded-lg"
+                          sizes="(max-width: 1024px) 100vw, 896px"
+                          className="object-cover"
                         />
                       </div>
                     </div>
@@ -402,7 +396,7 @@ export default function Carousel() {
 
           {/* Carousel Indicators - Only show for multiple workshops */}
           {workshops.length > 1 && (
-            <div className="flex justify-center mt-8 space-x-2 lg:hidden">
+            <div className="flex justify-center mt-8 space-x-2">
               {workshops.length > 0 &&
                 Array.from({
                   length: Math.ceil(Math.max(0, workshops.length - cardsPerView + 1)),
