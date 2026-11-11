@@ -45,10 +45,11 @@ import {
   ExternalLink,
   Loader2,
   RefreshCw,
+  Save,
 } from "lucide-react"
 import Link from "next/link"
 import { useState, useEffect } from "react"
-import { getWorkshops, deleteWorkshop, getEvents } from "@/service/registrationService"
+import { getWorkshops, deleteWorkshop, getEvents, getSectionTitle, updateSectionTitle, DEFAULT_SECTION_TITLE } from "@/service/registrationService"
 import type { Workshop } from "@/types/workshop-types"
 import type { Event } from "@/types/events-types"
 import { useToast } from "@/hooks/use-toast"
@@ -73,10 +74,37 @@ export default function WorkshopsManagement() {
   const [workshopToDelete, setWorkshopToDelete] = useState<Workshop | null>(null)
   const [deleting, setDeleting] = useState(false)
   const { toast } = useToast()
+  const [sectionTitle, setSectionTitle] = useState(DEFAULT_SECTION_TITLE)
+  const [savedSectionTitle, setSavedSectionTitle] = useState(DEFAULT_SECTION_TITLE)
+  const [savingTitle, setSavingTitle] = useState(false)
 
   useEffect(() => {
     fetchData()
+    getSectionTitle().then((res) => {
+      if (res.data) {
+        setSectionTitle(res.data)
+        setSavedSectionTitle(res.data)
+      }
+    })
   }, [])
+
+  const handleSaveSectionTitle = async () => {
+    const title = sectionTitle.trim()
+    if (!title) {
+      toast({ title: "Error", description: "Title cannot be empty" })
+      return
+    }
+    setSavingTitle(true)
+    const res = await updateSectionTitle(title)
+    setSavingTitle(false)
+    if (res.success) {
+      setSectionTitle(res.data || title)
+      setSavedSectionTitle(res.data || title)
+      toast({ title: "Success", description: "Section title updated" })
+    } else {
+      toast({ title: "Error", description: res.error || "Failed to update title" })
+    }
+  }
 
   const fetchData = async () => {
     setLoading(true)
@@ -237,6 +265,38 @@ export default function WorkshopsManagement() {
           </div>
         )}
       </div>
+
+      {/* Section Title (shown on home page and sub page) */}
+      <Card className="w-full max-w-full">
+        <CardHeader>
+          <CardTitle className="text-lg">Section Title</CardTitle>
+          <CardDescription>
+            Heading shown on the home page section and the sub page (e.g. &quot;CHILDREN&apos;S CORNER&quot;).
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col sm:flex-row gap-2 w-full max-w-full">
+            <Label htmlFor="section-title" className="sr-only">
+              Section title
+            </Label>
+            <Input
+              id="section-title"
+              value={sectionTitle}
+              maxLength={100}
+              onChange={(e) => setSectionTitle(e.target.value)}
+              className="flex-1"
+            />
+            <Button
+              onClick={handleSaveSectionTitle}
+              disabled={savingTitle || !sectionTitle.trim() || sectionTitle.trim() === savedSectionTitle}
+              className="w-full sm:w-auto"
+            >
+              {savingTitle ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+              Save Title
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Search */}
       <Card className="w-full max-w-full">

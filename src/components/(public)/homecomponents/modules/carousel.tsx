@@ -5,9 +5,10 @@ import { ChevronRight, ChevronLeft, ArrowUpRight } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import AOS from "aos"
 import "aos/dist/aos.css"
-import { getWorkshops } from "@/service/registrationService"
+import { getWorkshops, getSectionTitle, DEFAULT_SECTION_TITLE } from "@/service/registrationService"
 import type { Workshop } from "@/types/workshop-types"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { getMediaUrl } from "@/utils/mediaUrl"
 
 // Custom Sun Icon component (placeholder)
@@ -21,6 +22,8 @@ export default function Carousel() {
   const [currentIndex, setCurrentIndex] = useState(0)
   const [isLoading, setIsLoading] = useState(true)
   const [workshops, setWorkshops] = useState<Workshop[]>([])
+  const [sectionTitle, setSectionTitle] = useState(DEFAULT_SECTION_TITLE)
+  const router = useRouter()
 
   // Calculate how many cards to show based on screen size
   const getCardsPerView = () => {
@@ -90,6 +93,10 @@ export default function Carousel() {
 
     fetchWorkshops()
 
+    getSectionTitle().then((res) => {
+      if (res.data) setSectionTitle(res.data)
+    })
+
     // Timeout fallback: if still loading after 5s, stop loading
     const loadingTimeout = setTimeout(() => {
       setIsLoading(false)
@@ -103,12 +110,7 @@ export default function Carousel() {
 
   // Loading skeleton component
   const LoadingSkeleton = () => (
-    <div className="bg-gray-200 border-4 border-gray-300 animate-pulse p-8 h-[420px] flex flex-col items-center justify-start relative overflow-visible rounded-t-full rounded-b-2xl w-full max-w-xs mx-auto">
-      <div className="mb-6 flex-1 flex items-center justify-center w-full">
-        <div className="w-[180px] h-[180px] rounded-full bg-gray-300 animate-pulse" />
-      </div>
-      <div className="h-6 w-32 rounded bg-gray-300 animate-pulse mt-2" />
-    </div>
+    <div className="bg-gray-200 border-4 border-gray-300 animate-pulse h-[420px] rounded-2xl w-full max-w-xs mx-auto" />
   )
 
   useEffect(() => {
@@ -126,13 +128,9 @@ export default function Carousel() {
     setCurrentIndex((prevIndex) => Math.min(prevIndex, maxIndex))
   }, [cardsPerView, workshops.length])
 
-  // Add handler for card click (same logic as registration-section.tsx)
-  const handleWorkshopClick = (workshop: Workshop) => {
-    if (workshop.registrationFormUrl) {
-      window.open(workshop.registrationFormUrl, '_blank', 'noopener,noreferrer')
-    } else {
-      window.open('/contactus', '_blank', 'noopener,noreferrer')
-    }
+  // Clicking an image opens the Children's Corner sub page
+  const handleWorkshopClick = () => {
+    router.push("/workshops")
   }
 
   return (
@@ -263,7 +261,7 @@ export default function Carousel() {
                       ARUNACHAL LITERATURE FESTIVAL
                     </h2>
                     <h3 className="text-[#4F8049] text-2xl md:text-4xl uppercase font-semibold tracking-wide font-dm-serif">
-                      WORKSHOPS AND EVENTS
+                      {sectionTitle}
                     </h3>
                   </div>
                 </div>
@@ -297,25 +295,22 @@ export default function Carousel() {
                     data-aos-delay="200"
                   >
                     <div
-                      className="bg-white border-4 border-[#FFD76B] hover:border-[#e67e22] p-8 h-[420px] flex flex-col items-center justify-center relative overflow-hidden rounded-t-full rounded-b-2xl w-full mx-auto transition-all duration-300 hover:shadow-xl hover:scale-105 group cursor-pointer"
-                      onClick={() => handleWorkshopClick(workshops[0])}
+                      className="bg-white border-4 border-[#FFD76B] hover:border-[#e67e22] p-3 h-[420px] flex items-center justify-center relative overflow-hidden rounded-2xl w-full mx-auto transition-all duration-300 hover:shadow-xl hover:scale-105 cursor-pointer"
+                      onClick={handleWorkshopClick}
                       tabIndex={0}
-                      role="button"
-                      aria-label={`Register for ${workshops[0].name}`}
-                      onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') handleWorkshopClick(workshops[0]) }}
+                      role="link"
+                      aria-label={`Open ${sectionTitle}`}
+                      onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') handleWorkshopClick() }}
                     >
-                      <div className="mb-6 flex-1 flex items-center justify-center w-full">
+                      <div className="relative w-full h-full">
                         <Image
                           src={getMediaUrl(workshops[0].imageUrl) || "/registration/creative.png"}
                           alt={workshops[0].name}
-                          width={180}
-                          height={180}
-                          className="object-contain drop-shadow-lg transition-transform duration-300"
+                          fill
+                          sizes="(max-width: 768px) 100vw, 320px"
+                          className="object-contain rounded-lg"
                         />
                       </div>
-                      <h4 className="text-lg font-bold text-gray-800 text-center leading-tight font-dm-serif mt-2 group-hover:text-[#e67e22] transition-colors duration-300 line-clamp-2">
-                        {workshops[0].name}
-                      </h4>
                     </div>
                   </motion.div>
                 )}
@@ -370,26 +365,23 @@ export default function Carousel() {
                               data-aos-delay={100 * index}
                             >
                               <div
-                                className="bg-white border-4 border-[#FFD76B] hover:border-[#e67e22] p-8 h-[420px] flex flex-col items-center justify-center relative overflow-hidden rounded-t-full rounded-b-2xl w-full max-w-xs mx-auto transition-all duration-300 hover:shadow-xl hover:scale-105 group cursor-pointer"
-                                onClick={() => handleWorkshopClick(workshop)}
-                                tabIndex={0}
-                                role="button"
-                                aria-label={`Register for ${workshop.name}`}
-                                onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') handleWorkshopClick(workshop) }}
-                              >
-                                <div className="mb-6 flex-1 flex items-center justify-center w-full">
-                                  <Image
-                                    src={getMediaUrl(workshop.imageUrl) || "/registration/creative.png"}
-                                    alt={workshop.name}
-                                    width={180}
-                                    height={180}
-                                    className="object-contain drop-shadow-lg transition-transform duration-300"
-                                  />
-                                </div>
-                                <h4 className="text-lg font-bold text-gray-800 text-center leading-tight font-dm-serif mt-2 group-hover:text-[#e67e22] transition-colors duration-300 line-clamp-2">
-                                  {workshop.name}
-                                </h4>
-                              </div>
+                      className="bg-white border-4 border-[#FFD76B] hover:border-[#e67e22] p-3 h-[420px] flex items-center justify-center relative overflow-hidden rounded-2xl w-full max-w-xs mx-auto transition-all duration-300 hover:shadow-xl hover:scale-105 cursor-pointer"
+                      onClick={handleWorkshopClick}
+                      tabIndex={0}
+                      role="link"
+                      aria-label={`Open ${sectionTitle}`}
+                      onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') handleWorkshopClick() }}
+                    >
+                      <div className="relative w-full h-full">
+                        <Image
+                          src={getMediaUrl(workshop.imageUrl) || "/registration/creative.png"}
+                          alt={workshop.name}
+                          fill
+                          sizes="(max-width: 768px) 100vw, 320px"
+                          className="object-contain rounded-lg"
+                        />
+                      </div>
+                    </div>
                             </motion.div>
                           ))}
                   </motion.div>
