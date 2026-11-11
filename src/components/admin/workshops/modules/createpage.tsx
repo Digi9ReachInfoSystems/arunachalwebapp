@@ -126,7 +126,7 @@ export default function CreateWorkshop() {
     if (!formData.name.trim()) {
       toast({
         title: "Validation Error",
-        description: "Workshop name is required",
+        description: "Name is required",
       })
       return false
     }
@@ -134,7 +134,7 @@ export default function CreateWorkshop() {
     if (!formData.about.trim()) {
       toast({
         title: "Validation Error",
-        description: "Workshop description is required",
+        description: "Description is required",
       })
       return false
     }
@@ -156,11 +156,12 @@ export default function CreateWorkshop() {
       return false
     }
 
-    // Backend requires Google Forms URL
-    if (!formData.registrationFormUrl.trim() || !formData.registrationFormUrl.startsWith('https://docs.google.com/forms/')) {
+    // Registration form URL is optional; if given it must be a Google Forms URL
+    const formUrl = formData.registrationFormUrl?.trim() || ""
+    if (formUrl && !formUrl.startsWith('https://docs.google.com/forms/')) {
       toast({
         title: "Validation Error",
-        description: "A valid Google Forms URL is required (must start with https://docs.google.com/forms/)",
+        description: "Registration Form URL must be a Google Forms link (https://docs.google.com/forms/...)",
       })
       return false
     }
@@ -197,14 +198,14 @@ export default function CreateWorkshop() {
       if (response.success) {
         toast({
           title: "Success",
-          description: "Workshop created successfully",
+          description: "Children's Corner item created successfully",
         })
         router.push("/admin/dashboard/workshops")
       } else {
         console.error("API Error Response:", response)
         toast({
           title: "Error",
-          description: response.error || "Failed to create workshop",
+          description: response.error || "Failed to create item",
         })
       }
     } catch (error) {
@@ -243,8 +244,8 @@ export default function CreateWorkshop() {
       ) : (
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 w-full max-w-full">
           <div className="min-w-0">
-            <h1 className="text-2xl md:text-3xl font-bold tracking-tight truncate">Create New Workshop</h1>
-            <p className="text-muted-foreground text-sm md:text-base truncate">Add a new workshop to your events.</p>
+            <h1 className="text-2xl md:text-3xl font-bold tracking-tight truncate">Add Children&apos;s Corner Item</h1>
+            <p className="text-muted-foreground text-sm md:text-base truncate">Add a new item to Children&apos;s Corner.</p>
           </div>
           {/* Responsive button group: stack on mobile, row on sm+ */}
           <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
@@ -260,7 +261,7 @@ export default function CreateWorkshop() {
             <Button variant="outline" asChild className="w-full sm:w-auto bg-transparent" suppressHydrationWarning={true}>
               <Link href="/admin/dashboard/workshops">
                 <ArrowLeft className="mr-2 h-4 w-4" />
-                Back to Workshops
+                Back to Children&apos;s Corner
               </Link>
             </Button>
           </div>
@@ -272,9 +273,9 @@ export default function CreateWorkshop() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <BookOpen className="h-5 w-5" />
-            Workshop Details
+            Item Details
           </CardTitle>
-          <CardDescription>Fill in the information for your new workshop.</CardDescription>
+          <CardDescription>Fill in the information for the new item.</CardDescription>
         </CardHeader>
         <CardContent>
           {shouldShowSkeleton ? (
@@ -283,11 +284,11 @@ export default function CreateWorkshop() {
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="grid gap-6 md:grid-cols-2">
                 <div className="space-y-2">
-                  <Label htmlFor="name">Workshop Name *</Label>
+                  <Label htmlFor="name">Name *</Label>
                   <Input
                     id="name"
                     name="name"
-                    placeholder="Enter workshop name"
+                    placeholder="Enter name"
                     value={formData.name}
                     onChange={handleChange}
                     required
@@ -323,11 +324,11 @@ export default function CreateWorkshop() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="about">About Workshop *</Label>
+                <Label htmlFor="about">About *</Label>
                 <Textarea
                   id="about"
                   name="about"
-                  placeholder="Enter workshop description and details"
+                  placeholder="Enter description and details"
                   value={formData.about}
                   onChange={handleChange}
                   rows={6}
@@ -337,7 +338,7 @@ export default function CreateWorkshop() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="registrationFormUrl">Registration Form URL *</Label>
+                <Label htmlFor="registrationFormUrl">Registration Form URL (optional)</Label>
                 <Input
                   id="registrationFormUrl"
                   name="registrationFormUrl"
@@ -345,14 +346,13 @@ export default function CreateWorkshop() {
                   placeholder="https://docs.google.com/forms/..."
                   value={formData.registrationFormUrl}
                   onChange={handleChange}
-                  required
                   suppressHydrationWarning={true}
                 />
-                <p className="text-xs text-muted-foreground">Must be a valid Google Forms URL</p>
+                <p className="text-xs text-muted-foreground">Optional. If added, must be a Google Forms URL</p>
               </div>
 
               <div className="space-y-4">
-                <Label>Workshop Image *</Label>
+                <Label>Image *</Label>
                 <p className="text-xs text-muted-foreground">Image upload is required</p>
 
                 <div className="space-y-4">
@@ -429,7 +429,7 @@ export default function CreateWorkshop() {
                   ) : (
                     <>
                       <Save className="mr-2 h-4 w-4" />
-                      Create Workshop
+                      Create Item
                     </>
                   )}
                 </Button>

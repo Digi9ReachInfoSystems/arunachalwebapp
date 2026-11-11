@@ -512,7 +512,7 @@ export default function AdminDashboard() {
                   <Button variant="outline" className="justify-start" asChild>
                     <Link href="/admin/dashboard/workshops">
                       <BookOpen className="mr-2 h-4 w-4" />
-                      Manage Workshops
+                      Manage Children&apos;s Corner
                     </Link>
                   </Button>
                 )}

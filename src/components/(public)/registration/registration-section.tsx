@@ -1,10 +1,9 @@
 "use client"
 import Image from "next/image"
 import { useEffect, useState } from "react"
-import { Button } from "@/components/ui/button"
-import { ArrowRight, ArrowUpRight, ChevronLeft, ChevronRight } from "lucide-react"
+import { ChevronLeft, ChevronRight } from "lucide-react"
 import SunIcon from "@/components/sunicon-gif"
-import { getWorkshops } from "@/service/registrationService"
+import { getWorkshops, getSectionTitle, DEFAULT_SECTION_TITLE } from "@/service/registrationService"
 import type { Workshop } from "@/types/workshop-types"
 import { getMediaUrl } from "@/utils/mediaUrl"
 
@@ -36,18 +35,9 @@ function RegistrationSkeleton() {
         </div>
         <div className="text-center mb-12">
           <div className="h-6 w-48 mx-auto mb-8 rounded bg-gray-200 animate-pulse" />
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto justify-center">
-            {[1, 2, 3].map((_, idx) => (
-              <div key={idx} className="bg-gray-200 border-4 border-gray-200 animate-pulse p-8 h-[420px] flex flex-col items-center justify-start relative overflow-visible rounded-t-full rounded-b-2xl w-full max-w-xs mx-auto">
-                <div className="mb-6 flex-1 flex items-center justify-center w-full">
-                  <div className="w-[180px] h-[180px] rounded-full bg-gray-300 animate-pulse" />
-                </div>
-                <div className="h-6 w-32 rounded bg-gray-300 animate-pulse mt-2" />
-                {/* Skeleton Select Button */}
-                <div className="flex justify-center mt-6 w-full">
-                  <div className="h-12 w-32 rounded-full bg-gray-300 animate-pulse" />
-                </div>
-              </div>
+          <div className="flex flex-col gap-8 max-w-4xl mx-auto">
+            {[1, 2].map((_, idx) => (
+              <div key={idx} className="bg-gray-200 border-4 border-gray-200 animate-pulse aspect-video rounded-2xl w-full" />
             ))}
           </div>
           
@@ -84,6 +74,7 @@ export default function RegistrationSection() {
   const [workshops, setWorkshops] = useState<Workshop[]>([])
   const [error, setError] = useState<string | null>(null)
   const [currentPage, setCurrentPage] = useState(1)
+  const [sectionTitle, setSectionTitle] = useState(DEFAULT_SECTION_TITLE)
   const workshopsPerPage = 3
 
   useEffect(() => {
@@ -105,17 +96,11 @@ export default function RegistrationSection() {
     }
 
     fetchWorkshops()
-  }, [])
 
-  const handleWorkshopSelect = (workshop: Workshop) => {
-    if (workshop.registrationFormUrl) {
-      // Open registration form in new tab
-      window.open(workshop.registrationFormUrl, '_blank', 'noopener,noreferrer')
-    } else {
-      // Fallback to contact page if no form URL
-      window.open('/contactus', '_blank', 'noopener,noreferrer')
-    }
-  }
+    getSectionTitle().then((res) => {
+      if (res.data) setSectionTitle(res.data)
+    })
+  }, [])
 
   // Pagination logic
   const totalPages = Math.ceil(workshops.length / workshopsPerPage)
@@ -153,10 +138,10 @@ export default function RegistrationSection() {
         <SunIcon size={24} className="opacity-80" />
       </div>
       {/* Optionally, mid-left and mid-right */}
-      <div className="absolute top-1/2 left-2 -translate-y-1/2 block md:hidden">
+      <div className="absolute top-1/2 left-2 -translate-y-1/2 hidden">
         <SunIcon size={20} className="opacity-70" />
       </div>
-      <div className="absolute top-1/2 right-2 -translate-y-1/2 block md:hidden">
+      <div className="absolute top-1/2 right-2 -translate-y-1/2 hidden">
         <SunIcon size={20} className="opacity-70" />
       </div>
       {/* Desktop: original sun icons */}
@@ -178,7 +163,7 @@ export default function RegistrationSection() {
       ) : error ? (
         <RegistrationErrorView error={error} />
       ) : workshops.length === 0 ? (
-        <RegistrationErrorView error="No workshops available at the moment. Please check back later." />
+        <RegistrationErrorView error="Nothing available at the moment. Please check back later." />
       ) : (
         <div className="container mx-auto px-4 py-12">
           {/* Header */}
@@ -188,15 +173,14 @@ export default function RegistrationSection() {
             {/* Remove sun icon between heading and subheading on mobile */}
             {/* Mobile: two lines, smaller text, centered, spaced */}
             <div className="block md:hidden text-center">
-              <div className="text-orange-500 text-lg font-bold font-dm-serif leading-tight mb-1">WORKSHOPS</div>
+              <div className="text-orange-500 text-lg font-bold font-dm-serif leading-tight mb-1">{sectionTitle}</div>
               {/* <div className="text-orange-500 text-lg font-bold font-dm-serif leading-tight">REGISTER NOW</div> */}
             </div>
             {/* Desktop: original heading and sun icons */}
             <div className="hidden md:flex items-center justify-center gap-4 mb-8">
               <SunIcon size={50} />
               <h2 className="text-2xl md:text-4xl font-bold text-orange-500 text-center font-dm-serif">
-                WORKSHOPS
-            
+                {sectionTitle}
               </h2>
               <SunIcon size={50} />
             </div>
@@ -204,51 +188,21 @@ export default function RegistrationSection() {
           {/* Workshop Selection */}
           <div className="text-center mb-12">
             {/* <h3 className="text-xl font-semibold text-gray-800 mb-8 font-dm-serif">Select your Workshop:</h3> */}
-            <div className={`grid gap-8 max-w-6xl mx-auto ${
-              currentWorkshops.length === 1 
-                ? 'grid-cols-1 justify-center' 
-                : currentWorkshops.length === 2 
-                  ? 'grid-cols-1 md:grid-cols-2 justify-center' 
-                  : 'grid-cols-1 md:grid-cols-3'
-            }`}>
+            <div className="flex flex-col gap-8 max-w-4xl mx-auto">
               {currentWorkshops.map((workshop: Workshop, index: number) => (
                 <div key={workshop._id ?? index} className="relative">
-                  {/* Workshop Card */}
+                  {/* Image Card (rectangle, image only) */}
                   <div
-                    className={`bg-white border-4 border-[#FFD76B] p-8 flex flex-col items-center justify-start relative overflow-visible rounded-t-full rounded-b-2xl w-full max-w-xs mx-auto ${
-                      currentWorkshops.length === 1 
-                        ? 'h-[450px]' 
-                        : 'h-[420px]'
-                    }`}
+                    className="bg-white border-4 border-[#FFD76B] relative overflow-hidden rounded-2xl w-fit max-w-full mx-auto shadow-md"
                   >
-                    {/* Workshop Image */}
-                    <div className="mb-6 flex-1 flex items-center justify-center w-full">
-                      <Image
+                    <Image
                         src={getMediaUrl(workshop.imageUrl) || "/registration/creative.png"}
                         alt={workshop.name}
-                        width={currentWorkshops.length === 1 ? 200 : 180}
-                        height={currentWorkshops.length === 1 ? 200 : 180}
-                        className="object-contain drop-shadow-lg mt-2"
+                        width={1600}
+                        height={900}
+                        sizes="(max-width: 1024px) 100vw, 896px"
+                        className="block w-auto h-auto max-w-full max-h-[260px] sm:max-h-[340px] md:max-h-[420px]"
                       />
-                    </div>
-                    {/* Workshop Title */}
-                    <h4 className="text-lg font-bold text-gray-800 text-center leading-tight font-dm-serif mt-2 line-clamp-2">
-                      {workshop.name}
-                    </h4>
-                  </div>
-                  {/* Select Button */}
-                  <div className="flex justify-center mt-6">
-                    <button 
-                      className="group relative flex items-center hover:scale-105 transition-transform duration-300 focus:outline-none"
-                      onClick={() => handleWorkshopSelect(workshop)}
-                    >
-                      <span className="bg-[#1A3FA9] text-white px-8 py-2 rounded-full text-lg font-medium text-center font-bilo">
-                        Select
-                      </span>
-                      <span className="absolute right-0 left-23 translate-x-1/2 bg-[#1A3FA9] w-10 h-10 rounded-full flex items-center justify-center shadow-lg transition-all duration-300 group-hover:translate-x-6 group-hover:rotate-12">
-                        <ArrowUpRight className="w-4 h-4 text-white transition-transform duration-300 group-hover:rotate-45" />
-                      </span>
-                    </button>
                   </div>
                 </div>
               ))}
