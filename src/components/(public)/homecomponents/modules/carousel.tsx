@@ -130,7 +130,7 @@ export default function Carousel() {
 
   // Clicking an image opens the Children's Corner sub page
   const handleWorkshopClick = () => {
-    router.push("/workshops")
+    router.push("/childrens-corner")
   }
 
   return (
@@ -267,7 +267,7 @@ export default function Carousel() {
                 </div>
       
                 <div data-aos="fade-up" data-aos-delay="400" data-aos-duration="1200" className="mt-8 flex justify-center">
-                  <Link href="/workshops" className="group relative flex items-center hover:scale-105 transition-transform duration-300 focus:outline-none">
+                  <Link href="/childrens-corner" className="group relative flex items-center hover:scale-105 transition-transform duration-300 focus:outline-none">
                     <span className="bg-[#4F8049] text-white px-8 py-3 rounded-full text-lg font-medium">
                       View All
                     </span>
