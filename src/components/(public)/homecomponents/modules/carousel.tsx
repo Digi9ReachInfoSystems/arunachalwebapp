@@ -289,7 +289,7 @@ export default function Carousel() {
                     data-aos-delay="200"
                   >
                     <div
-                      className="bg-white border-4 border-[#FFD76B] hover:border-[#e67e22] relative overflow-hidden rounded-2xl w-full max-w-4xl mx-auto shadow-md transition-all duration-300 hover:shadow-xl cursor-pointer"
+                      className="bg-white border-4 border-[#FFD76B] hover:border-[#e67e22] relative overflow-hidden rounded-2xl w-fit max-w-full mx-auto shadow-md transition-all duration-300 hover:shadow-xl cursor-pointer"
                       onClick={handleWorkshopClick}
                       tabIndex={0}
                       role="link"
@@ -302,7 +302,7 @@ export default function Carousel() {
                           width={1600}
                           height={900}
                           sizes="(max-width: 1024px) 100vw, 896px"
-                          className="block w-full h-auto"
+                          className="block w-auto h-auto max-w-full max-h-[260px] sm:max-h-[340px] md:max-h-[420px]"
                         />
                     </div>
                   </motion.div>
@@ -358,7 +358,7 @@ export default function Carousel() {
                               data-aos-delay={100 * index}
                             >
                               <div
-                      className="bg-white border-4 border-[#FFD76B] hover:border-[#e67e22] relative overflow-hidden rounded-2xl w-full max-w-4xl mx-auto shadow-md transition-all duration-300 hover:shadow-xl cursor-pointer"
+                      className="bg-white border-4 border-[#FFD76B] hover:border-[#e67e22] relative overflow-hidden rounded-2xl w-fit max-w-full mx-auto shadow-md transition-all duration-300 hover:shadow-xl cursor-pointer"
                       onClick={handleWorkshopClick}
                       tabIndex={0}
                       role="link"
@@ -371,7 +371,7 @@ export default function Carousel() {
                           width={1600}
                           height={900}
                           sizes="(max-width: 1024px) 100vw, 896px"
-                          className="block w-full h-auto"
+                          className="block w-auto h-auto max-w-full max-h-[260px] sm:max-h-[340px] md:max-h-[420px]"
                         />
                     </div>
                             </motion.div>

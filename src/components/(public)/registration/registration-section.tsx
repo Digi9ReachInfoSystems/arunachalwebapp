@@ -193,7 +193,7 @@ export default function RegistrationSection() {
                 <div key={workshop._id ?? index} className="relative">
                   {/* Image Card (rectangle, image only) */}
                   <div
-                    className="bg-white border-4 border-[#FFD76B] relative overflow-hidden rounded-2xl w-full shadow-md"
+                    className="bg-white border-4 border-[#FFD76B] relative overflow-hidden rounded-2xl w-fit max-w-full mx-auto shadow-md"
                   >
                     <Image
                         src={getMediaUrl(workshop.imageUrl) || "/registration/creative.png"}
@@ -201,7 +201,7 @@ export default function RegistrationSection() {
                         width={1600}
                         height={900}
                         sizes="(max-width: 1024px) 100vw, 896px"
-                        className="block w-full h-auto"
+                        className="block w-auto h-auto max-w-full max-h-[260px] sm:max-h-[340px] md:max-h-[420px]"
                       />
                   </div>
                 </div>
